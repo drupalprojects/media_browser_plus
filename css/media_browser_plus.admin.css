@@ -1,8 +1,3 @@
-.media-filter-select {
-  height: 100px;
-  width: 200px;
-} 
-
 #folder {
   width: 200px;
   overflow:auto;
@@ -71,8 +66,6 @@
 #folder div.emptyParent{
   background-image: url(../images/icons/folder-parent-empty.png);
 }
-
-
 
 #folder div.emptyFolder {
   color: #999;
@@ -155,4 +148,77 @@
 #media_paging_table .active_page a:hover {
   cursor: default;
   text-decoration: none;
+}
+
+.media-item {
+  padding: 16px 16px 4px 16px;
+}
+
+input.hidden {
+  display:none;
+}
+
+#navlist {
+  width: 100%;
+  height: 180px;
+  overflow: auto;
+}
+
+ul#navlist {
+  white-space: nowrap;
+  margin: 0px;
+}
+#navlist img {
+  width: 120px;
+  height: 120px;
+  padding: 10px;
+  border: 1px solid #cccccc;
+}
+
+#navlist div {
+  width: 150px;
+  height: 150px;
+  display: inline;
+}
+
+#navlist div.media-select {
+  padding: 10px;
+}
+
+#navlist div.selected img {
+  background-color: #F4ECC7;
+}
+
+#navlist li {
+  display: inline;
+  list-style-type: none;
+}
+
+#media-basket-list{
+  list-style-type: none;
+  overflow: auto;
+  height: 165px;
+}
+#media_browser_plus_selection_panel {
+  text-align: right;
+}
+
+#media_browser_plus_selection_panel a {
+  margin-right: 20px;
+}
+
+#media_browser_plus_basket_panel a {
+  margin-right: 20px;
+}
+
+#media_browser_plus_basket_panel {
+  text-align: right;
+}
+
+#edit-column-three {
+  clear: both;
+}
+
+#media_browser_plus_preview_panel {
+  text-align: center;
 }
