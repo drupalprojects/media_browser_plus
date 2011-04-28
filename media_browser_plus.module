@@ -76,7 +76,7 @@ function media_browser_plus_submit($form, &$form_state) {
   if (!is_array($fids)) {
     $fids = array($fids);
   }
-  $media_entities = media_load_multiple($fids);
+  $media_entities = file_load_multiple($fids);
   $needs_save = FALSE;
 
   // If tags have been entered, apply them to each new entity.
@@ -123,7 +123,7 @@ function media_browser_plus_submit($form, &$form_state) {
 
   if ($needs_save) {
     foreach ($media_entities as $media) {
-      media_save($media);
+      file_save($media);
     }
   }
 }
@@ -169,7 +169,7 @@ function media_browser_plus_preprocess_media_link(&$variables) {
   // all links that would otherwise default to the filename.
   // @todo Solve generically using the 'label' key of hook_entity_indo(). See
   //   http://drupal.org/node/910396.
-  $media = media_load($variables['file']->fid);
+  $media = file_load($variables['file']->fid);
   if (empty($variables['file']->description) && isset($media->media_title[LANGUAGE_NONE][0]['value'])) {
     $variables['file']->description = $media->media_title[LANGUAGE_NONE][0]['value'];
   }
@@ -181,7 +181,7 @@ function media_browser_plus_preprocess_media_link(&$variables) {
 function media_browser_plus_preprocess_media_thumbnail(&$variables) {
   // See media_browser_plus_preprocess_media_link(). Same thing here, but for
   // the links that appear underneath thumbnail previews.
-  $media = $variables['element']['#object'];
+  $media = $variables['element']['#file'];
   if (isset($media->media_title[LANGUAGE_NONE][0]['value'])) {
     $variables['element']['#name'] = $media->media_title[LANGUAGE_NONE][0]['value'];
   }
