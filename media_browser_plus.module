@@ -109,9 +109,9 @@ function media_browser_plus_submit($form, &$form_state) {
         // Limiting value population only if the field is of type 'text' or
         // 'text_long' isn't as extensible as would be ideal, but we need some
         // protection against populating a field with incompatible content.
-        if (isset($field) && in_array($field['type'], array('text', 'text_long')) && isset($field['bundles']['media'])) {
+        if (isset($field) && in_array($field['type'], array('text', 'text_long')) && isset($field['bundles']['file'])) {
           foreach ($files as $file) {
-            if (in_array($file->type, $field['bundles']['media']) && !isset($file->{$field_name}[LANGUAGE_NONE][0]['value'])) {
+            if (in_array($file->type, $field['bundles']['file']) && !isset($file->{$field_name}[LANGUAGE_NONE][0]['value'])) {
               $file->{$field_name}[LANGUAGE_NONE][0]['value'] = $value;
               $needs_save = TRUE;
             }
