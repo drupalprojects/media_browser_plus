@@ -6,31 +6,30 @@
 
 
 /**
- * Enter description here ...
+ * @todo Document what this function does.
  *
  * @param $files
  * @param $context
  */
 function media_browser_plus_folder_media_import($root, $dir, &$context) {
-  // config
   $per_page = 50;
   $media_count = media_browser_plus_load_multiple(array('apply_filter' => FALSE, 'count_only' => TRUE));
-  
+
   if (empty($context['sandbox'])) {
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['max'] = $media_count;
   }
-  // look how far we got and where we have to resume
+  // Look how far we got and where we have to resume.
   $media_start = $context['sandbox']['progress'];
   $page = $media_start == 0 ? 0 : bcdiv($media_start, $per_page, 0);
-  //
+
   if (!isset($context['results'])) {
     $context['results'] = array('success' => array(), 'errors' => array());
   }
-  $order = array(array("property" => array("fid", "ASC")));
+  $order = array(array('property' => array('fid', 'ASC')));
   $attributes = array('apply_filter' => FALSE, 'paging' => TRUE, 'per_page' => $per_page, 'page' => $page, 'order' => $order);
   $media_query = media_browser_plus_load_multiple($attributes);
-  // Checking media
+  // Checking media.
   foreach ($media_query->results as $media) {
     if (!isset($media->field_folder[LANGUAGE_NONE])) {
       $media->field_folder = array(LANGUAGE_NONE => array(array('tid' => $root)));
@@ -39,14 +38,14 @@ function media_browser_plus_folder_media_import($root, $dir, &$context) {
       file_move($media, $destination, FILE_EXISTS_RENAME);
     }
   }
-  // increment start
+  // Increment start.
   $media_start = $media_start + $per_page;
-  // make sure start is not above max (for progress)
+  // Make sure start is not above max (for progress).
   $media_start = $media_start > $media_count ? $media_count : $media_start;
-  // set sandbox value
+  // Set sandbox value.
   $context['sandbox']['max'] = $media_count;
   $context['sandbox']['progress'] = $media_start;
-  // and other context values
+  // And other context values.
   $context['message'] = t('Checking') . '...(' . $context['sandbox']['progress'] . '/' . $context['sandbox']['max'] . ') ';
   if ($context['sandbox']['progress'] < $context['sandbox']['max']) {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
@@ -54,7 +53,7 @@ function media_browser_plus_folder_media_import($root, $dir, &$context) {
 }
 
 /**
- * finished
+ * Finished
  *
  * @param $success
  * @param $results
