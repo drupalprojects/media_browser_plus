@@ -309,7 +309,7 @@ function media_browser_plus_change_folder($form, &$form_state) {
   }
 
   // Save changes.
-  media_browser_plus_file_move($folder, $media);
+  media_browser_plus_move_file($folder, $media);
 
   // @fixme Decide: die() or return.
   die('');
@@ -466,7 +466,7 @@ function media_browser_plus_media_import_batch_import_files($files, $form_values
       $media->field_folder[LANGUAGE_NONE][0] = array('tid' => $form_values['field_folder']);
       $media->field_tags[LANGUAGE_NONE] = $form_values['field_tags'];
 
-      media_browser_plus_file_move($form_values['field_folder'], $media);
+      media_browser_plus_move_file($form_values['field_folder'], $media);
     }
     catch (Exception $e) {
       $context['results']['errors'][] = $file . ' Reason: ' . $e->getMessage();
@@ -590,7 +590,7 @@ function media_browser_plus_submit($form, &$form_state) {
   }
 
   foreach ($media_entities as $media) {
-    media_browser_plus_file_move($form_state['values']['field_folder'], $media);
+    media_browser_plus_move_file($form_state['values']['field_folder'], $media);
   }
 
 }
@@ -607,7 +607,7 @@ function media_browser_plus_edit_file_submit($form, &$form_state) {
   $folder_id = $media->field_folder[LANGUAGE_NONE][0]['tid'];
   // Only save it if the folder id is changed
   if ($form['field_folder'][LANGUAGE_NONE]['#default_value'][0] != $folder_id) {
-    media_browser_plus_file_move($folder_id, $media);
+    media_browser_plus_move_file($folder_id, $media);
   }
 }
 
@@ -1211,7 +1211,7 @@ function media_browser_plus_media_admin_folder_change_submit(&$form, &$form_stat
     else {
       $media->field_folder = array(LANGUAGE_NONE => array(array('tid' => $folder)));
     }
-    media_browser_plus_file_move($folder, $media);
+    media_browser_plus_move_file($folder, $media);
   }
 
   drupal_set_message(t('Folder changes applied successfully'));
@@ -2179,7 +2179,7 @@ function media_browser_plus_move_physical_folder($source, $destination) {
  * @param $media the media object.
  * @param $replace Replace behavior when the destination file already exists.
  */
-function media_browser_plus_file_move($tid, $media, $replace = FILE_EXISTS_RENAME) {
+function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
   $folder = media_browser_plus_folder_load($tid);
   $path = media_browser_plus_construct_dir_path($folder);
   $destination = $path . '/' . $media->filename;
