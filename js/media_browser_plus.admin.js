@@ -32,7 +32,7 @@
             $(this).toggleClass('dragOverDrop');
           }
         });
-        
+
       }
       $("#media-basket-list").droppable({
         accept: "#media-thumb-list > li",
@@ -43,7 +43,7 @@
         out: function (event, ui) {
           $(this).toggleClass('dragOverDrop');
         }
-      }); 
+      });
       $('#media-filter-launch').bind('click', function( event ) {
         $.colorbox({iframe:true, href:Drupal.settings.media_browser_plus.url +
           "?q=admin/content/media/filter", width:"90%", height:"90%", onClosed: Drupal.behaviors.media_browser_folders.reloadData});
@@ -85,7 +85,7 @@
           selectedPreviewIndex = selectedPreviewItems.length - 1;
         Drupal.behaviors.media_browser_folders.loadPreview(selectedPreviewItems[selectedPreviewIndex]);
         return false;
-      }); 
+      });
       $('#select_preview_item').bind('click', function( event ) {
         $media = $('div.media-item', $('#media-item-' + selectedPreviewItems[selectedPreviewIndex], $('#media-thumb-list')));
         Drupal.behaviors.media_browser_folders.selectMedia($media);
@@ -154,7 +154,7 @@
     },
     selectMediaItems : function (data) {
       $('div.selected', $('#media-thumb-list')).each(function(index){
-        // put single select check here to otherwise 
+        // put single select check here to otherwise
         // you get a whole lot of alerts in some cases
         if(!Drupal.settings.media_browser_plus.multiselect) {
           if($('li', $('#media-basket-list')).html() != null) {
