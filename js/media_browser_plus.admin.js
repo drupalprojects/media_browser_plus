@@ -1,6 +1,11 @@
 (function ($) {
   Drupal.behaviors.media_browser_folders = {
     attach: function (context) {
+      // Show links hidden by media module.
+      // This is a workaround, see http://drupal.org/node/1174374 for details.
+      $('.action-links li', context).show();
+      // Remove the not needed ones only
+      $('ul.action-links li', context).has('a[href$="media/browser"], a[href$="media/import"]').hide();
       var gallery = $('#media-thumb-list');
       var selectedPreviewIndex = 0;
       var selectedPreviewItems = new Array();
