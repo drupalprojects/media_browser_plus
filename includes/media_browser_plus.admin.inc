@@ -67,6 +67,8 @@ function media_browser_plus_folder_media_import_finished($success, $results, $op
     drupal_set_message(t('Error during media batch'), 'error');
   }
   variable_del('media_folder_import_start');
-  drupal_goto('admin/content/media');
+  if (!drupal_installation_attempted()) {
+    drupal_goto('admin/content/media');
+  }
 }
 
