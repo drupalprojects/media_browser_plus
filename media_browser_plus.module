@@ -2182,6 +2182,7 @@ function media_browser_plus_move_physical_folder($source, $destination) {
 function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
   $folder = media_browser_plus_folder_load($tid);
   $path = media_browser_plus_construct_dir_path($folder);
+  file_prepare_directory($path, FILE_CREATE_DIRECTORY);
   $destination = $path . '/' . $media->filename;
   file_move($media, $destination, $replace);
 }
