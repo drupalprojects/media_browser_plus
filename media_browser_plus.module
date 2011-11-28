@@ -489,10 +489,10 @@ function media_browser_plus_media_import_batch_import_files($files, $form_values
  */
 function media_browser_plus_media_import_batch_complete($success, $results, $operations) {
   if ($results['errors']) {
-    drupal_set_message(theme('item_list', array('items' => $results['errors'])), 'error');
+    drupal_set_message(filter_xss(theme('item_list', array('items' => $results['errors']))), 'error');
   }
   if ($results['success']) {
-    drupal_set_message(theme('item_list', array('items' => $results['success'])));
+    drupal_set_message(filter_xss(theme('item_list', array('items' => $results['success']))));
   }
 }
 /**
@@ -2180,8 +2180,14 @@ function media_browser_plus_move_physical_folder($source, $destination) {
  * @param $replace Replace behavior when the destination file already exists.
  */
 function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
-  $folder = media_browser_plus_folder_load($tid);
-  $path = media_browser_plus_construct_dir_path($folder);
-  $destination = $path . '/' . $media->filename;
-  file_move($media, $destination, $replace);
+  // Dont change the uri for media files with external source
+  if (strpos($media->uri, 'public') === FALSE && strpos($media->uri, 'private') === FALSE) {
+    file_save($media);
+  }
+  else {
+    $folder = media_browser_plus_folder_load($tid);
+    $path = media_browser_plus_construct_dir_path($folder);
+    $destination = $path . '/' . $media->filename;
+    file_move($media, $destination, $replace);
+  }
 }
