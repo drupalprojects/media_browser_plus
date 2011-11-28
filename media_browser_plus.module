@@ -2136,13 +2136,19 @@ function _media_browser_plus_media_basket_select_button() {
  * @param $term object containing term id and term name
  */
 function media_browser_plus_construct_dir_path($term) {
-  $parents = array_reverse(taxonomy_get_parents_all($term->tid));
-  $path = variable_get('file_default_scheme', 'public') . '://';
-  foreach ($parents as $parent) {
-    $path .= $parent->name . '/';
-  }
-  $path = str_replace('Media Root', variable_get('media_root_folder', 'media'), $path);
-  return rtrim($path, '/');
+  $file_default_scheme = variable_get('file_default_scheme', 'public') . ':/';
+  if ($term) {
+    $parents = array_reverse(taxonomy_get_parents_all($term->tid));
+    if (is_array($parents) && !empty($parents)) {
+      $path = $file_default_scheme . '/';
+      foreach ($parents as $parent) {
+        $path .= $parent->name . '/';
+      }
+      $path = str_replace('Media Root', variable_get('media_root_folder', 'media'), $path);
+      $dir_path = rtrim($path, '/');
+    }
+   }
+  return isset($dir_path) ? $dir_path : $file_default_scheme;
 }
 
 /**
