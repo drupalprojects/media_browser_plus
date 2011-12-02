@@ -162,6 +162,8 @@ function media_browser_plus_download_images_submit($form, &$form_state) {
  *
  */
 function _media_browser_plus_media_admin_list_alter(&$form, &$form_state) {
+  global $user;
+
   // Check access rights.
   if (!media_browser_plus_access('media list view')) {
     drupal_access_denied();
@@ -225,12 +227,22 @@ function _media_browser_plus_media_admin_list_alter(&$form, &$form_state) {
       && ($term = taxonomy_term_load($media->field_folder[LANGUAGE_NONE][0]['tid']))) {
       $folder = $term->name;
     }
+
+    // Load user object if media author is not the current user.
+    if ($media->uid != $user->uid) {
+     $media_user = user_load($media->uid);
+    }
+    // Media author is the same as current user no need to load the user.
+    else{
+      $media_user = $user;
+    }
+
     $options[$media->fid] = array(
       'title' => theme('media_link', array('file' => $media)),
       'folder' => $folder,
       'type' => check_plain($media->filemime),
       'size' => format_size($media->filesize),
-      'author' => theme('username', array('account' => $media)),
+      'author' => theme('username', array('account' => $media_user)),
       'timestamp' => format_date($media->timestamp, 'short'),
     );
     $options[$media->fid]['operations'] = l(t('edit'), 'media/' . $media->fid . '/edit', array('query' => $destination));
