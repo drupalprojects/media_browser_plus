@@ -8,6 +8,7 @@
  * Implements hook_install().
  */
 function media_browser_plus_install() {
+  variable_set('media_root_folder', 'media');
   // Make sure the standard 'field_tags' field exists.
   _media_browser_plus_ensure_field_tags();
   _media_browser_plus_ensure_field_folder();
@@ -137,9 +138,8 @@ function media_browser_plus_enable() {
   variable_set('media_media_per_page', 30);
   variable_set('media_grid_window_height', 400);
   variable_set('media_page_items_per_page', 10);
-  variable_set('media_root_folder', 'media');
   // Create the media folder.
-  $dir = variable_get('file_default_scheme', 'public') . '://media/';
+  $dir = variable_get('file_default_scheme', 'public') . '://' . variable_get('media_root_folder') . '/';
   file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
   $term = media_browser_plus_get_media_root_folder(TRUE);
   if (is_object($term)) {
