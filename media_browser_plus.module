@@ -345,10 +345,19 @@ function media_browser_plus_thumbnailsJSON() {
         $valid = TRUE;
         foreach ($value as $type => $params) {
           foreach ($params as $param) {
-
-            if (strlen(trim($param)) == 0) {
-              $valid = FALSE;
-              break;
+            if (is_array($param)) {
+              foreach ($param as $media_type) {
+                if (strlen(trim($media_type)) == 0) {
+                  $valid = FALSE;
+                  break;
+                }
+              }
+            }
+            else {
+              if (strlen(trim($param)) == 0) {
+                $valid = FALSE;
+                break;
+              }
             }
           }
         }
