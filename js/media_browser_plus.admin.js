@@ -51,7 +51,7 @@
       });
       $('#media-filter-launch').bind('click', function( event ) {
         $.colorbox({iframe:true, href:Drupal.settings.media_browser_plus.url +
-          "?q=admin/content/media/filter", width:"90%", height:"90%", onClosed: Drupal.behaviors.media_browser_folders.reloadData});
+          "?q=admin/content/file/filter", width:"90%", height:"90%", onClosed: Drupal.behaviors.media_browser_folders.reloadData});
         return false;
       });
       $('#media_buttons_view').bind('click', function( event ) {
@@ -143,7 +143,7 @@
       // look if old folder is now empty
       // send the change media folder request
       // @TODO: think about some success/error UI Feedback
-      $.post(Drupal.settings.media_browser_plus.url + "?q=admin/content/media/change_folder", {media: id, folder: folder.attr('id')});
+      $.post(Drupal.settings.media_browser_plus.url + "?q=admin/content/file/change_folder", {media: id, folder: folder.attr('id')});
       // remove item from gallery
       item.addClass("movedImage");
       item.fadeOut();
@@ -224,7 +224,7 @@
       // @TODO: add some kind of loading UI and failure handling here
       // and load in new ones
       $filter = Drupal.settings.media_browser_plus.filter;
-      $.getJSON(Drupal.settings.media_browser_plus.url + "?q=admin/content/media/thumbnailsJSON", {folder: $item.attr('id'), page : $page, filter : $filter}, Drupal.behaviors.media_browser_folders.folderContentsLoaded);
+      $.getJSON(Drupal.settings.media_browser_plus.url + "?q=admin/content/file/thumbnailsJSON", {folder: $item.attr('id'), page : $page, filter : $filter}, Drupal.behaviors.media_browser_folders.folderContentsLoaded);
       // redo the pages menu
       Drupal.settings.media_browser_plus.page = $page;
     },
@@ -331,7 +331,7 @@
         }
         $maxWidth = myWidth - 100;
         $maxHeight = myHeight - 250;
-        $.post(Drupal.settings.media_browser_plus.url + "?q=admin/content/media/" + id +"/preview", { maxWidth: $maxWidth, maxHeight: $maxHeight}, Drupal.behaviors.media_browser_folders.displayLoadedPreview);
+        $.post(Drupal.settings.media_browser_plus.url + "?q=admin/content/file/" + id +"/preview", { maxWidth: $maxWidth, maxHeight: $maxHeight}, Drupal.behaviors.media_browser_folders.displayLoadedPreview);
         $('#media_browser_plus_preview_content').html('<img src="'+Drupal.settings.media_browser_plus.images_url+'loading.gif" />');
       }
     },

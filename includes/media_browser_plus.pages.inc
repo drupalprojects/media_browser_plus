@@ -24,7 +24,7 @@ function media_browser_plus_edit_multiple_form($fids) {
       $destination = drupal_get_destination();
       unset($_GET['destination']);
     }
-    $destination = isset($destination['destination']) ? $destination['destination'] : 'admin/content/media';
+    $destination = isset($destination['destination']) ? $destination['destination'] : 'admin/content/file';
     if ($_POST['op'] === 'Save' && !form_get_errors()) {
       drupal_set_message(t('Media items changed successfully'));
       drupal_goto($destination);
@@ -103,7 +103,7 @@ function media_browser_plus_media_preview($form, &$form_state, $media) {
  * @param $form_state
  */
 function media_browser_plus_media_preview_submit($form, &$form_state) {
-  $form_state['redirect'] = 'admin/content/media/thumbnails';
+  $form_state['redirect'] = 'admin/content/file/thumbnails';
 }
 
 /**
@@ -345,7 +345,7 @@ function media_browser_plus_media_filter_submit($form, &$form_state) {
   $_SESSION['media-filter']['field_folder'] = array_keys($temp);
 
   // go back to media overview
-  // $form_state['redirect'] = array('admin/content/media');
+  // $form_state['redirect'] = array('admin/content/file');
 }
 
 /**
@@ -370,5 +370,5 @@ function media_browser_plus_media_filter_clear($form, &$form_state) {
   // Remove filter.
   unset($_SESSION['media-filter']);
   // go back to media overview
-  // $form_state['redirect'] = array('admin/content/media');
+  // $form_state['redirect'] = array('admin/content/file');
 }

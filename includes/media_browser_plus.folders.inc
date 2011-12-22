@@ -15,7 +15,7 @@ function media_browser_plus_folder_list($form, &$form_state) {
   $form['action-links'] = array(
     '#type' => 'markup',
     '#markup' => '<ul class="action-links"><li>' .
-      l(t('Add new folder'), 'admin/content/media/add_folder', array('query' => $destination)) .
+      l(t('Add new folder'), 'admin/content/file/add_folder', array('query' => $destination)) .
        '</li></ul>',
   );
   $header = array(
@@ -81,7 +81,7 @@ function media_browser_plus_folder_list_submit($form, &$form_state) {
     }
   }
   drupal_set_message(t('Changes saved successfully'));
-  $form_state['redirect'] = 'admin/content/media/thumbnails';
+  $form_state['redirect'] = 'admin/content/file/thumbnails';
 }
 
 /**
@@ -91,7 +91,7 @@ function media_browser_plus_folder_list_submit($form, &$form_state) {
  * @param $form_state
  */
 function media_browser_plus_folder_admin_list_cancel($form, &$form_state) {
-  $form_state['redirect'] = 'admin/content/media/thumbnails';
+  $form_state['redirect'] = 'admin/content/file/thumbnails';
 }
 /**
  * @todo Document what this function does.
@@ -112,8 +112,8 @@ function media_browser_plus_folder_admin_list() {
     $row[] = theme('indentation', array('size' => $item->depth)) . $item->name;
     $row[] = media_browser_plus_folder_theme_folder_weight_column($item->weight, $item->tid, $item->parents[0]);
     $row[] = $item->description;
-    $row[] = l(t('edit'), 'admin/content/media/folder/' . $item->tid . '/edit', array('query' => $destination));
-    $row[] = l(t('delete'), 'admin/content/media/folder/' . $item->tid . '/delete', array('query' => $destination));
+    $row[] = l(t('edit'), 'admin/content/file/folder/' . $item->tid . '/edit', array('query' => $destination));
+    $row[] = l(t('delete'), 'admin/content/file/folder/' . $item->tid . '/delete', array('query' => $destination));
     // Change formate of row.
     $row = array('data' => $row);
     $row['class'][] = 'draggable';
@@ -201,7 +201,7 @@ function media_browser_plus_folder_add_submit_continue($form, &$form_state) {
     $destination = drupal_get_destination();
     unset($_GET['destination']);
   }
-  $form_state['redirect'] = array('admin/content/media/add_folder', array('query' => $destination));
+  $form_state['redirect'] = array('admin/content/file/add_folder', array('query' => $destination));
 }
 
 /**
@@ -292,7 +292,7 @@ function media_browser_plus_folder_edit_delete($form, &$form_state) {
       $destination = drupal_get_destination();
       unset($_GET['destination']);
     }
-    $form_state['redirect'] = array('admin/content/media/folder/' . (int) $form_state['values']['folder_id'] . '/delete', array('query' => $destination));
+    $form_state['redirect'] = array('admin/content/file/folder/' . (int) $form_state['values']['folder_id'] . '/delete', array('query' => $destination));
   }
 }
 

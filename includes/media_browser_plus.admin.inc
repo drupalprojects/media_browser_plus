@@ -68,7 +68,7 @@ function media_browser_plus_folder_media_import_finished($success, $results, $op
   }
   variable_del('media_folder_import_start');
   if (!drupal_installation_attempted()) {
-    drupal_goto('admin/content/media');
+    drupal_goto('admin/content/file');
   }
 }
 
