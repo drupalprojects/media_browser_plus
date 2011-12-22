@@ -2166,7 +2166,7 @@ function media_browser_plus_construct_dir_path($term) {
 function media_browser_plus_move_physical_folder($source, $destination) {
   $destination = drupal_realpath($destination);
   $source = drupal_realpath($source);
-  $jail = drupal_realpath(variable_get('file_default_scheme', 'public'));
+  $jail = drupal_realpath(variable_get('file_default_scheme', 'public') . '://');
   // @todo Please avoid an error by checking the preconditions instead.
   $files = @scandir($source);
   if ($files && count($files) > 2 ) {
