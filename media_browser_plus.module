@@ -1539,7 +1539,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     'root_folder' => array(
       '#type' => 'textfield',
       '#title' => 'Media Root folder',
-      '#default_value' => media_variable_get('media_root_folder', 'media'),
+      '#default_value' => variable_get('media_root_folder', 'media'),
       '#description' => t('The root folder of uploaded images.Dont use start or end slashes. eg "media/images"'),
       '#required' => TRUE,
     ),
@@ -1558,8 +1558,9 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
  * @param $form_state
  */
 function media_browser_plus_media_settings_submit($form, &$form_state) {
+  $scheme = variable_get('file_default_scheme', 'public') . '://';
   // Get current media root folder.
-  $current_root = variable_get('media_root_folder');
+  $old_root = variable_get('media_root_folder');
   // And set the new.
   $new_root = trim($form_state['values']['root_folder'], '/');
 
@@ -1572,6 +1573,8 @@ function media_browser_plus_media_settings_submit($form, &$form_state) {
   // Move the files to the new root folder if its changed.
   if ($old_root != $new_root) {
     variable_set('media_root_folder', $new_root);
+    $source = $scheme . $old_root;
+    $destination = $scheme . $new_root;
     media_browser_plus_move_physical_folder($source, $destination);
   }
 
