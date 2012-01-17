@@ -1119,7 +1119,7 @@ function _media_browser_plus_folder_hierarchy_list_helper($parents, &$children, 
       $buffer .= '<div id="folder_load_' . $item->tid . '" class="folder_load';
       $buffer .= $has_media ? '' : ' emptyFolder';
       $buffer .= '">' . $item->name . '</div>' . "\n";
-      $buffer .= _media_browser_plus_folder_hierarchy_list_helper($children[$item->tid], $children, TRUE);
+      $buffer .= _media_browser_plus_folder_hierarchy_list_helper($children[$item->tid], $children);
       $buffer .= '</li>' . "\n";
     }
     else {
@@ -1890,7 +1890,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
   // Aetting up the header.
   $header = array(
     array(
-      'data' => t('Categories'),
+      'data' => t('Folders'),
       'width' => '200',
     ),
     array(
