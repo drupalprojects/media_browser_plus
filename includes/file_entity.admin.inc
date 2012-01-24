@@ -186,7 +186,7 @@ function _media_browser_plus_media_admin_list_alter(&$form, &$form_state) {
       'author' => theme('username', array('account' => $media_user)),
       'timestamp' => format_date($media->timestamp, 'short'),
     );
-    $options[$media->fid]['operations'] = l(t('edit'), 'media/' . $media->fid . '/edit', array('query' => $destination));
+    $options[$media->fid]['operations'] = l(t('edit'), 'file/' . $media->fid . '/edit', array('query' => $destination));
   }
   // Grab old options.
   $ops = $form['options']['operation']['#options'];

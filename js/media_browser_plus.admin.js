@@ -5,7 +5,7 @@
       // This is a workaround, see http://drupal.org/node/1174374 for details.
       $('.action-links li', context).show();
       // Remove the not needed ones only
-      $('ul.action-links li', context).has('a[href$="media/browser"], a[href$="media/import"]').hide();
+      $('ul.action-links li', context).has('a[href$="file/browser"], a[href$="media/import"]').hide();
       var gallery = $('#media-thumb-list');
       var selectedPreviewIndex = 0;
       var selectedPreviewItems = new Array();
@@ -58,7 +58,7 @@
           $media = $("div.selected:first", $('#media-thumb-list'));
           if($media.html() != null)
             window.open(Drupal.settings.media_browser_plus.url +
-              "?q=media/" +Drupal.behaviors.media_browser_folders.getId($media.parent().attr('id'), 11) + "/view");
+              "?q=file/" +Drupal.behaviors.media_browser_folders.getId($media.parent().attr('id'), 11) + "/view");
           return false;
         });
       $('#media_buttons_preview').bind('click', function( event ) {
