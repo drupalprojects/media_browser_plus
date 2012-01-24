@@ -208,7 +208,7 @@ function _media_browser_plus_media_admin_list_alter(&$form, &$form_state) {
       'submit' => array(
         '#type' => 'submit',
         '#value' => t('Submit'),
-        '#submit' => array('media_admin_submit'),
+        '#submit' => $form['#submit'],
       ),
     ),
     'folder' => array(
