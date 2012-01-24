@@ -52,7 +52,7 @@ function _media_browser_plus_ensure_field_tags() {
   );
   _media_browser_plus_ensure_field($field);
   // Ensure instance for each media bundle.
-  foreach (array_keys(media_type_get_types()) as $bundle) {
+  foreach (array_keys(file_info_file_types()) as $bundle) {
     $field['bundle'] = $bundle;
     _media_browser_plus_ensure_instance($field);
   }
@@ -96,7 +96,7 @@ function _media_browser_plus_ensure_field_folder() {
   );
   _media_browser_plus_ensure_field($field);
   // Ensure instance for each media bundle.
-  foreach (array_keys(media_type_get_types()) as $bundle) {
+  foreach (array_keys(file_info_file_types()) as $bundle) {
     $field['bundle'] = $bundle;
     _media_browser_plus_ensure_instance($field);
   }
@@ -169,4 +169,12 @@ function media_browser_plus_uninstall() {
   variable_del('media_grid_window_height');
   variable_del('media_page_items_per_page');
   variable_del('media_root_folder');
+}
+
+/**
+ * Ensure the media_browser_plus fields are attached on all file types.
+ */
+function media_browser_plus_update_7001() {
+  _media_browser_plus_ensure_field_folder();
+  _media_browser_plus_ensure_field_tags();
 }
