@@ -278,10 +278,10 @@ function media_browser_plus_media_import_batch_import_files($files, $form_values
  */
 function media_browser_plus_media_import_batch_complete($success, $results, $operations) {
   if ($results['errors']) {
-    drupal_set_message(theme('item_list', array('items' => $results['errors'])), 'error');
+    drupal_set_message(filter_xss(theme('item_list', array('items' => $results['errors']))), 'error');
   }
   if ($results['success']) {
-    drupal_set_message(theme('item_list', array('items' => $results['success'])));
+    drupal_set_message(filter_xss(theme('item_list', array('items' => $results['success']))));
   }
 }
 /**
@@ -1896,13 +1896,19 @@ function _media_browser_plus_media_basket_select_button() {
  * @param $term object containing term id and term name
  */
 function media_browser_plus_construct_dir_path($term) {
-  $parents = array_reverse(taxonomy_get_parents_all($term->tid));
-  $path = variable_get('file_default_scheme', 'public') . '://';
-  foreach ($parents as $parent) {
-    $path .= $parent->name . '/';
+  $file_default_scheme = variable_get('file_default_scheme', 'public') . ':/';
+  if ($term) {
+    $parents = array_reverse(taxonomy_get_parents_all($term->tid));
+    $path = $file_default_scheme . '/';
+    if (is_array($parents) && !empty($parents)) {
+      foreach ($parents as $parent) {
+        $path .= $parent->name . '/';
+      }
+    }
+    $path = str_replace('Media Root', variable_get('media_root_folder', 'media'), $path);
+    $dir_path = rtrim($path, '/');
   }
-  $path = str_replace('Media Root', variable_get('media_root_folder', 'media'), $path);
-  return rtrim($path, '/');
+  return isset($dir_path) ? $dir_path : $file_default_scheme;
 }
 
 /**
@@ -1940,9 +1946,22 @@ function media_browser_plus_move_physical_folder($source, $destination) {
  * @param $replace Replace behavior when the destination file already exists.
  */
 function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
-  $folder = media_browser_plus_folder_load($tid);
-  $path = media_browser_plus_construct_dir_path($folder);
-  file_prepare_directory($path, FILE_CREATE_DIRECTORY);
-  $destination = $path . '/' . $media->filename;
-  file_move($media, $destination, $replace);
+  // Dont change the uri for media files with external source
+  if (strpos($media->uri, 'public') === FALSE && strpos($media->uri, 'private') === FALSE) {
+    file_save($media);
+  }
+  else {
+    // media translation module does need this since it allows the creation of
+    // file references which shouldn't move the referenced file itself when moved.
+    // see http://drupal.org/node/1331818 for details.
+    if (module_exists('media_translation') && media_translation_is_virtual_file($media->fid)) {
+      file_save($media);
+      return;
+    }
+    $folder = media_browser_plus_folder_load($tid);
+    $path = media_browser_plus_construct_dir_path($folder);
+    file_prepare_directory($path, FILE_CREATE_DIRECTORY);
+    $destination = $path . '/' . $media->filename;
+    file_move($media, $destination, $replace);
+  }
 }
