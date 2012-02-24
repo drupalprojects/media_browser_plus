@@ -16,7 +16,7 @@ function media_browser_plus_edit_multiple_form($fids) {
 
   // Produce form via multiform.
   module_load_include('inc', 'media', 'includes/media.pages');
-  $form = media_page_multiedit($media_items);
+  $form = media_file_page_edit_multiple($media_items);
 
   // @TODO: change to normale redirect once this works with multiform
   if (isset($_POST['op'])) {
