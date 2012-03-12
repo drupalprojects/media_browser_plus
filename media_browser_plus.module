@@ -574,7 +574,7 @@ function media_browser_plus_menu() {
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_thumbnailsJSON',
     'access callback' => 'media_access',
-    'access arguments' => array('preview'),
+    'access arguments' => array('view'),
   );
   $items['admin/config/media/media_browser_plus_settings'] = array(
     'title' => 'Media Browser Plus Settings',
@@ -746,6 +746,7 @@ function media_browser_plus_library() {
 
 /**
  * Checks if the user has the permission to download a file.
+ * @todo: this function may be obsolete in 2.x
  *
  * @param $field
  * @param $entity_type
@@ -755,12 +756,14 @@ function media_browser_plus_file_download_access($field, $entity_type, $entity) 
   // Only check against media entities.
   if ($entity_type == 'file') {
     // Check for media admin AND return true if found.
-    return media_browser_plus_media_access($entity);
+    return file_acces('view', $entity);
+    //return media_browser_plus_media_access($entity);
   }
 }
 
 /**
  * Checks access to a given media entity.
+ * @todo: this function may be obsolete in 2.x
  *
  * @param $media_entity
  */
@@ -791,6 +794,7 @@ function media_browser_plus_media_access($media_entity) {
 
 /**
  * Revokes the general 'view media' == 'download media' access rule.
+ * @todo: this function may be obsolete in 2.x
  *
  * @param $grants
  * @param $field
@@ -1740,9 +1744,11 @@ function media_browser_plus_main_view_javascript_settings() {
   // Gather enviroment data.
   $path = drupal_get_path('module', 'media_browser_plus');
   $url = $base_url . base_path();
+  $clean_url = variable_get('clean_url', 0);
   // Create default settings.
   $settings = array(
     'media_browser_plus' => array(
+      'clean_url' => $clean_url,
       'filter_active' => isset($_SESSION['media-filter']),
       'url' => $url,
       'images_url' => $base_url . '/' . $path . '/images/',
