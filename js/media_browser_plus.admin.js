@@ -224,7 +224,11 @@
       // @TODO: add some kind of loading UI and failure handling here
       // and load in new ones
       $filter = Drupal.settings.media_browser_plus.filter;
-      $.getJSON(Drupal.settings.media_browser_plus.url + "?q=admin/content/file/thumbnailsJSON", {folder: $item.attr('id'), page : $page, filter : $filter}, Drupal.behaviors.media_browser_folders.folderContentsLoaded);
+      $path_prefix = '';
+      if (!Drupal.settings.media_browser_plus.clean_url) {
+        $path_prefix = '?q=';
+      }
+      $.getJSON(Drupal.settings.media_browser_plus.url + $path_prefix + "admin/content/file/thumbnailsJSON", {folder: $item.attr('id'), page : $page, filter : $filter}, Drupal.behaviors.media_browser_folders.folderContentsLoaded);
       // redo the pages menu
       Drupal.settings.media_browser_plus.page = $page;
     },
