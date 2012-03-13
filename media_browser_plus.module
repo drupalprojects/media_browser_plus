@@ -657,6 +657,8 @@ function media_browser_plus_menu() {
 function media_browser_plus_menu_alter(&$items) {
   $items['admin/content/file']['access arguments'] = array('access media backend');
   $items['admin/content/file']['access callback'] = array('media_browser_plus_access');
+  $items['admin/content/file/thumbnails']['access arguments'] = array('access media backend');
+  $items['admin/content/file/thumbnails']['access callback'] = array('media_browser_plus_access');
 }
 
 /**
