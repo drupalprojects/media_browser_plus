@@ -682,9 +682,9 @@ function media_browser_plus_permission() {
       'title' => t('Upload media'),
       'description' => t('Allow user to add media.'),
     ),
-    'download media' => array(
-      'title' => t('Download Media'),
-      'description' => t('Allows the user to download the original media items.'),
+    'download files' => array(
+      'title' => t('Download Files'),
+      'description' => t('Allows the user to download the original file items.'),
     ),
     'filter media' => array(
       'title' => t('Filter Media'),
