@@ -80,8 +80,16 @@ function media_browser_plus_media_preview($form, &$form_state, $media) {
     if (strstr($media->uri, 'private://')) {
       $stream = new DrupalPrivateStreamWrapper();
     }
-    else {
+    elseif (strstr($media->uri, 'public://')) {
       $stream = new DrupalPublicStreamWrapper();
+    }
+    // Support for remote files.
+    if (isset($stream)) {
+      $stream->setUri($media->uri);
+      $uri = $stream->getExternalUrl($media->uri);
+    }
+    else {
+      $uri = $media->uri;
     }
     $stream->setUri($media->uri);
     $uri = $stream->getExternalUrl($media->uri);
