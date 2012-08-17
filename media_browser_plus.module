@@ -1058,6 +1058,8 @@ function media_browser_plus_load_multiple($variables) {
   $query = new EntityFieldQuery();
   // Set entity type to media.
   $query->entityCondition('entity_type', 'file');
+  // EntityFieldQuery shouldn't check access against node_access
+  $query->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
   // Parse ids if any have been passed.
   if (count($params['ids'])) {
     $query->entityCondition('entity_id', $params['ids'], 'IN');
