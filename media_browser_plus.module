@@ -1067,6 +1067,10 @@ function media_browser_plus_load_multiple($variables) {
       }
     }
   }
+  // Do not list temporary files
+  foreach (array_keys(media_get_hidden_stream_wrappers()) as $name) {
+    $params['conditions'][] = array('property' => array('uri', $name . '%', 'NOT LIKE'));
+  }
   // Allow other modules to add/alter conditions.
   foreach (module_implements('media_access_conditions') as $module) {
     $params['conditions'] = array_merge(module_invoke($module, 'media_access_conditions'), $params['conditions']);
