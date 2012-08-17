@@ -546,8 +546,8 @@ function media_browser_plus_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_change_folder'),
     'type' => MENU_CALLBACK,
-    'access callback' => 'media_access',
-    'access arguments' => array('edit'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('edit file'),
   );
   $items['admin/content/file/filter'] = array(
     'title' => 'Media Filter',
@@ -562,16 +562,15 @@ function media_browser_plus_menu() {
   $items['admin/content/file/thumbnailsJSON'] = array(
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_thumbnailsJSON',
-    'access callback' => 'media_access',
-    'access arguments' => array('view'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('view file'),
   );
   $items['admin/config/media/media_browser_plus_settings'] = array(
     'title' => 'Media Browser Plus Settings',
     'description' => 'Change the behaviour and layout of the media browser plus UI',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_media_settings'),
-    'access callback' => 'media_access',
-    'access arguments' => array('administer'),
+    'access arguments' => array('administer files'),
   );
   $items['admin/content/file/edit_multiple/%'] = array(
     'title' => 'Edit Media Items',
@@ -580,15 +579,14 @@ function media_browser_plus_menu() {
     'file' => 'includes/media_browser_plus.pages.inc',
     'access callback' => 'media_browser_plus_access',
     'access arguments' => array('preview media'),
-    'access arguments' => array('edit'),
   );
   $items['admin/content/file/delete_multiple/%'] = array(
     'title' => 'Delete Media Items',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_delete_multiple_form', 4),
     'file' => 'includes/media_browser_plus.pages.inc',
-    'access callback' => 'media_access',
-    'access arguments' => array('edit'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('edit file'),
   );
   // Folder management disabled until menu bug has been fixed.
   $items['admin/content/file/folder_list'] = array(
@@ -1551,10 +1549,8 @@ function media_browser_plus_media_browser_plugin_info() {
       'file' => 'MediaBrowserPlusLibrary.inc',
       'class' => 'MediaBrowserPlusLibrary',
     ),
-    // @todo Replace with appropriate file access function when that gets
-    //   committed to File Entity project.
-    'access callback' => 'media_access',
-    'access arguments' => array('view'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('view file'),
   );
   return $plugins;
 }
@@ -1681,7 +1677,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
     '<a href="#media_folder_table" id="media_main_view_deselect_all" >' . t('Deselect All') . '</a>',
   );
   if (!$library_mode) {
-    if (media_access('view')) {
+    if (media_browser_plus_access('view file')) {
       $form['buttons']['view_media'] = array(
         '#type' => 'button',
         '#attributes' => array('id' => 'media_buttons_view'),
@@ -1695,7 +1691,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
         '#value' => t('Preview'),
       );
     }
-    if (media_access('edit')) {
+    if (media_browser_plus_access('edit file')) {
       $form['buttons']['edit_media'] = array(
         '#type' => 'submit',
         '#attributes' => array('id' => 'media_buttons_edit'),
@@ -1704,7 +1700,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
         '#value' => t('Edit'),
       );
     }
-    if (media_access('edit')) {
+    if (media_browser_plus_access('edit file')) {
       // edit-submit
       $form['buttons']['delete_media'] = array(
         '#type' => 'submit',
@@ -1797,7 +1793,7 @@ function media_browser_plus_main_view_javascript_settings() {
         'only_one_selection_allowed' => t('Only one media item may be selected'),
       ),
   // Access settings.
-      'folder_dnd_enabled' => media_access('edit'),
+      'folder_dnd_enabled' => media_browser_plus_access('edit file'),
       'manage_folders' => media_browser_plus_access('edit folders'),
       'filter_allowed' => media_browser_plus_access('filter media'),
       'add_files' => media_browser_plus_access('upload media'),
