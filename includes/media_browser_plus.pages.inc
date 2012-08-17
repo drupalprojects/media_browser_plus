@@ -45,11 +45,14 @@ function media_browser_plus_edit_multiple_form($fids) {
  */
 function media_browser_plus_delete_multiple_form($form, &$form_state, $fids) {
   $files = array();
+
   foreach (explode(' ', $fids) as $key => $value) {
-    $files[$value] = $value;
+    $files[(int) $value] = (int) $value;
   }
+  $files = file_load_multiple($files);
+
   module_load_include('inc', 'file_entity', 'file_entity.pages');
-  $form = drupal_get_form('file_entity_multiple_delete_confirm', $files);
+  $form = drupal_get_form('file_multiple_delete_form', $files);
   return $form;
 }
 
