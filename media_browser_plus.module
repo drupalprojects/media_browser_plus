@@ -317,7 +317,23 @@ function media_browser_plus_submit($form, &$form_state) {
   // Grab the fids of the newly created media entities from the redirect query
   // string that was created by the form's primary submit handler, and load the
   // corresponding entities.
-  $fids = $form_state['redirect'][1]['query']['fid'];
+  $fids = NULL;
+  if (isset($form_state['files'])) {
+    foreach ($form_state['files'] as $i => $fid)  {
+      $fids[$i] = $fid->fid;
+      $i++;
+    }
+  }
+  elseif (isset($form_state['file'])) {
+    $fids = $form_state['file']->fid;
+  }
+  elseif (isset($form_state['redirect'][1]['query']['fid'])) {
+    // Compatibility mode.
+    // @TODO: Remove once the latest versions of media and file_entity are wide
+    // spread.
+    $fids = $form_state['redirect'][1]['query']['fid'];
+  }
+
   if (!is_array($fids)) {
     $fids = array($fids);
   }
@@ -565,6 +581,7 @@ function media_browser_plus_menu() {
     'page arguments' => array(),
     'access callback' => 'media_browser_plus_access',
     'access arguments' => array('view file'),
+    'type' => MENU_CALLBACK
   );
   $items['admin/config/media/media_browser_plus_settings'] = array(
     'title' => 'Media Browser Plus Settings',
