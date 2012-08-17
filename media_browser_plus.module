@@ -1591,6 +1591,7 @@ function media_browser_plus_media_browser_plugin_info() {
   $plugins['library_plus'] = array(
     'title' => t('Library Plus'),
     'weight' => 10,
+    'class' => 'MediaBrowserPlusLibrary',
     'handler' => array(
       'path' => drupal_get_path('module', 'media_browser_plus') . '/includes',
       'file' => 'MediaBrowserPlusLibrary.inc',

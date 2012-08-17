@@ -8,10 +8,13 @@ class MediaBrowserPlusLibrary extends MediaBrowserLibrary {
 
     // Get plugin form.
     $upload_form = drupal_get_form('media_browser_plus_library_browser', $multiselect, $types);
-    return array(
-      '#title' => t('Library Plus'),
-      'form' => array($upload_form),
-    );
+    $upload_form['#title'] = t('Library Plus');
+
+    $upload_form['admin']['#markup'] .= l(t('Cancel'), '', array(
+      'attributes' => array('class' => array('button', 'fake-cancel', $this->info['name']))
+    ));
+
+    return $upload_form;
   }
 
 }
