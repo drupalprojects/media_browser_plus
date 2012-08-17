@@ -34,9 +34,13 @@ function media_browser_plus_download_images_submit($form, &$form_state) {
       'apply_filter' => FALSE,
       'paging' => FALSE,
     ));
-    // Create archive.
-    apache_setenv('no-gzip', '1');
 
+    // If possible avoid duplicate compression.
+    if (function_exists('apache_setenv')) {
+      @apache_setenv('no-gzip', '1');
+    }
+
+    // Create archive.
     $name = 'media-download-' . md5(microtime() . uniqid());
     $zip_file = '/tmp/' . $name . '.zip';
     $zip = new ZipArchive();
