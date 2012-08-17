@@ -562,6 +562,7 @@ function media_browser_plus_menu() {
   $items['admin/content/file/thumbnailsJSON'] = array(
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_thumbnailsJSON',
+    'page arguments' => array(),
     'access callback' => 'media_browser_plus_access',
     'access arguments' => array('view file'),
   );
@@ -998,7 +999,7 @@ function media_browser_plus_load_multiple($variables) {
     'order' => array(),
     'header' => array(),
     'page' => -1,
-    'per_page' => variable_get('media_media_per_page'),
+    'per_page' => variable_get('media_media_per_page', 30),
     'paging' => TRUE,
     'ids_only' => FALSE,
     'count_only' => FALSE,
@@ -1130,7 +1131,7 @@ function media_browser_plus_load_multiple($variables) {
   // Prepare result object.
   $res_object = new stdClass();
   if ($params['paging'] && !$params['count_only']) {
-    // Doing a seperate count query here, because including the internal pager
+    // Doing a separate count query here, because including the internal pager
     // doesn't work but seems the only way to get a total result count.
     $count = clone $query;
     $count->pager();
@@ -1145,7 +1146,7 @@ function media_browser_plus_load_multiple($variables) {
     $query->range($page * $params['per_page'], $params['per_page']);
     // Adding the addition result fields.
     $res_object->page = $page;
-    $res_object->pages = ceil($res_object->overall_count / variable_get('media_media_per_page'));
+    $res_object->pages = ceil($res_object->overall_count / variable_get('media_media_per_page', 30));
     $res_object->per_page = $params['per_page'];
   }
   // Count only query.
@@ -1285,7 +1286,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
       '#type' => 'textfield',
       '#title' => 'Media Items per page',
       '#description' => t('Insert a number higher than one for the amount of media items displayed per page.'),
-      '#default_value' => variable_get('media_media_per_page'),
+      '#default_value' => variable_get('media_media_per_page', 30),
       '#maxlength' => 4,
       '#required' => TRUE,
     ),
@@ -1784,7 +1785,7 @@ function media_browser_plus_main_view_javascript_settings() {
       'url' => $url,
       'images_url' => $base_url . '/' . $path . '/images/',
       'page' => isset($_GET['page']) ? $_GET['page'] : 0,
-      'per_page' => variable_get('media_media_per_page'),
+      'per_page' => variable_get('media_media_per_page', 30),
       'page_items_per_page' => variable_get('media_page_items_per_page'),
       'folder_management_url' => url('admin/content/file/folder_list'),
       'multiselect' => TRUE,
