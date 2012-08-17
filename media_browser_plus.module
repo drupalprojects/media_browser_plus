@@ -1352,7 +1352,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
       '#type' => 'textfield',
       '#title' => 'Upload Maximum Filesize',
       '#default_value' => media_variable_get('max_filesize'),
-      '#description' => t('Standard unit is MB and therefore can be left out. Otherwise use "NUMBER UNIT"'),
+      '#description' => t('Standard unit is bytes and therefore can be left out. Otherwise use "NUMBER UNIT"'),
       '#maxlength' => 20,
       '#required' => TRUE,
     ),
