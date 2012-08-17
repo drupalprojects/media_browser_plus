@@ -1492,6 +1492,9 @@ function media_browser_plus_load_tag_terms($tags, $tids_only = TRUE, $auto_creat
 
 /**
  * Loads and (if $autocreate is set) creates the default media folder object.
+ *
+ * @return object|FALSE
+ *   The folder term or FALSE if not found.
  */
 function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
@@ -1520,10 +1523,11 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
         $term_id = $result->tid;
       }
     }
-    if ($term_id) {
+    if (isset($term_id)) {
       return media_browser_plus_folder_load($term_id);
     }
   }
+  return FALSE;
 }
 
 /**
