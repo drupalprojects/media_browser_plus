@@ -191,7 +191,7 @@ function media_browser_plus_form_media_import_alter(&$form, &$form_state) {
  * Changing the media import standard submit to use our own batch process.
  */
 function media_browser_plus_media_import_submit($form, &$form_state) {
-  if ($form_state['values']['op'] == 'Confirm') {
+  if ($form_state['values']['op'] == t('Confirm')) {
     $files = $form_state['storage']['files'];
     $batch = array(
       'title' => t('Importing Media'),
@@ -237,7 +237,7 @@ function media_browser_plus_media_import_batch_import_files($files, $form_values
   $files = &$context['sandbox']['files'];
 
   // Take a cut of files.  Let's do 10 at a time.
-  $length = media_variable_get('import_batch_size', 0);
+  $length = media_variable_get('import_batch_size', 10);
   if ($length > count($files)) {
     $length = count($files);
   }
@@ -248,16 +248,20 @@ function media_browser_plus_media_import_batch_import_files($files, $form_values
     try {
       $file_obj = media_parse_to_file($file);
       $context['results']['success'][] = $file;
-      if (!$image_in_message) {
-        $media = file_load($file_obj->fid);
-        $image_in_message = field_view_field('file', $media, 'file', 'media_preview');
-      }
+
       // Adding fields here.
       $media = file_load($file_obj->fid);
       $media->field_folder[LANGUAGE_NONE][0] = array('tid' => $form_values['field_folder']);
       $media->field_tags[LANGUAGE_NONE] = $form_values['field_tags'];
 
       media_browser_plus_move_file($form_values['field_folder'], $media);
+
+      if (!$image_in_message) {
+        // @todo Is this load step really necessary? When there's time, test
+        //   this, and either remove it, or comment why it's needed.
+        $media = file_load($file_obj->fid);
+        $image_in_message = file_view_file($media, 'media_preview');
+      }
     }
     catch (Exception $e) {
       $context['results']['errors'][] = $file . ' Reason: ' . $e->getMessage();
