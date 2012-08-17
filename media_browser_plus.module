@@ -25,7 +25,7 @@ require_once dirname(__FILE__) . '/includes/file_entity.admin.inc';
  *   The form state.
  */
 function media_browser_plus_download_images_submit($form, &$form_state) {
-  if (isset($form_state['input']['selected_media']) && media_access('download')) {
+  if (isset($form_state['input']['selected_media']) && media_browser_plus_access('download media')) {
     $ids = array_keys($form_state['input']['selected_media']);
     // Only load those.
     $conditions[] = array('property' => array('fid', array($ids), 'IN'));
@@ -550,8 +550,8 @@ function media_browser_plus_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_media_filter'),
     'file' => 'includes/media_browser_plus.pages.inc',
-    'access callback' => 'media_access',
-    'access arguments' => array('filter'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('filter media'),
     'type' => MENU_LOCAL_ACTION,
     'context' => MENU_CONTEXT_INLINE,
   );
@@ -574,7 +574,8 @@ function media_browser_plus_menu() {
     'page callback' => 'media_browser_plus_edit_multiple_form',
     'page arguments' => array(4),
     'file' => 'includes/media_browser_plus.pages.inc',
-    'access callback' => 'media_access',
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('preview media'),
     'access arguments' => array('edit'),
   );
   $items['admin/content/file/delete_multiple/%'] = array(
@@ -627,8 +628,8 @@ function media_browser_plus_menu() {
     'description' => 'Preview Media Item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_media_preview', 3),
-    'access callback' => 'media_access',
-    'access arguments' => array('preview'),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('preview media'),
     'file' => 'includes/media_browser_plus.pages.inc',
   );
   return $items;
@@ -641,8 +642,8 @@ function media_browser_plus_menu() {
  *   List of existing menu items.
  */
 function media_browser_plus_menu_alter(&$items) {
+  $items['admin/content/file']['access callback'] = 'media_browser_plus_access';
   $items['admin/content/file']['access arguments'] = array('access media backend');
-  $items['admin/content/file']['access callback'] = array('media_browser_plus_access');
   $items['admin/content/file/thumbnails']['access arguments'] = array('access media backend');
   $items['admin/content/file/thumbnails']['access callback'] = array('media_browser_plus_access');
 }
@@ -758,7 +759,7 @@ function media_browser_plus_file_download_access($field, $entity_type, $entity) 
  * @param object $media_entity
  */
 function media_browser_plus_media_access($media_entity) {
-  if (media_browser_plus_access('administer media')) {
+  if (media_browser_plus_access('administer files')) {
     return TRUE;
   }
   // Start with ACCESS_ALLOW - by default media items are fully accessible.
@@ -815,7 +816,7 @@ function media_browser_plus_media_operations() {
  *   TRUE if the user has the permission.
  */
 function media_browser_plus_access($op) {
-  return (user_access('administer media') || user_access($op));
+  return (user_access('administer files') || user_access($op));
 }
 
 /**
@@ -1683,7 +1684,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
         '#value' => t('View'),
       );
     }
-    if (media_access('preview')) {
+    if (media_browser_plus_access('preview media')) {
       $form['buttons']['preview_media'] = array(
         '#type' => 'button',
         '#attributes' => array('id' => 'media_buttons_preview'),
@@ -1793,9 +1794,9 @@ function media_browser_plus_main_view_javascript_settings() {
       ),
   // Access settings.
       'folder_dnd_enabled' => media_access('edit'),
-      'manage_folders' => media_access('edit folders'),
-      'filter_allowed' => media_access('filter'),
-      'add_files' => media_access('upload'),
+      'manage_folders' => media_browser_plus_access('edit folders'),
+      'filter_allowed' => media_browser_plus_access('filter media'),
+      'add_files' => media_browser_plus_access('upload media'),
     ),
   );
   return $settings;
@@ -1816,7 +1817,7 @@ function media_browser_plus_media_basket_form($library_mode = FALSE) {
     $form['basket_actions']['select'] = _media_browser_plus_media_basket_select_button();
   }
   else {
-    if (media_access('download')) {
+    if (media_browser_plus_access('download media')) {
       $form['basket_actions']['download'] = array(
         '#type' => 'submit',
         '#value' => t('Download'),

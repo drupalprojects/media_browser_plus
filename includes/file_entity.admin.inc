@@ -49,7 +49,7 @@ function media_browser_plus_form_file_entity_admin_files_alter(&$form, &$form_st
   $form['files'] = media_browser_plus_grid_view_form();
   $form['media-basket'] = media_browser_plus_media_basket_form();
 
-  if (media_access('preview')) {
+  if (media_browser_plus_access('preview media')) {
     $form['media-preview'] = media_browser_plus_media_preview_form();
   }
   return $form;
