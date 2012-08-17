@@ -1574,23 +1574,6 @@ function media_browser_plus_media_browser_plugin_info() {
 }
 
 /**
- * Implements hook_media_browser_plugins().
- *
- * Remove the old library for the media browser popup.
- */
-function media_browser_plus_media_browser_plugins_alter(&$form, &$form_state) {
-  // @TODO: find a better way to keep the library_plus from popping up only when
-  // the old library would without editing media module if possible
-  if (!isset($form['library'])) {
-    unset($form['library_plus']);
-  }
-  // Remove old library.
-  if (isset($form['library'])) {
-    unset($form['library']);
-  }
-}
-
-/**
  * Creates the Extended Library for the media browser popup.
  *
  * @param array $form
