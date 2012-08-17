@@ -64,8 +64,9 @@ function media_browser_plus_form_file_entity_admin_files_alter(&$form, &$form_st
 function media_browser_plus_file_entity_admin_files_validate($form, &$form_state) {
   // Copy input files to values.
   if ($form_state['values']['op'] != 'Download') {
-    $form_state['values']['files'] = $form_state['input']['files'];
+    $form_state['values']['files'] = isset($form_state['input']['files'])? $form_state['input']['files'] : NULL;
     // Call the old validate.
+    form_load_include($form_state, 'inc', 'file_entity', 'file_entity.admin');
     file_entity_admin_files_validate($form, $form_state);
   }
 }

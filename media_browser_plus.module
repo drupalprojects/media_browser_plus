@@ -1637,10 +1637,10 @@ function media_browser_plus_library_browser($form, &$form_state, $multiselect, $
     unset($form['switch']);
   }
   // Add main grid view window.
-  $form['admin'] = media_browser_plus_grid_view_form(TRUE, $multiselect);
+  $form['admin'] = media_browser_plus_grid_view_form(TRUE, $multiselect, $form_state);
   // Append media basket only for multi select.
   if ($multiselect) {
-    $form['media-basket'] = media_browser_plus_media_basket_form(TRUE);
+    $form['media-basket'] = media_browser_plus_media_basket_form(TRUE, $form_state);
   }
   return $form;
 }
@@ -1662,13 +1662,16 @@ function media_browser_plus_file_delete($file) {
 /**
  * Appends main grid view form.
  */
-function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect = FALSE) {
+function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect = FALSE, &$form_state = array()) {
   // Load the media folders.
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   $folders = taxonomy_get_tree($vocabulary->vid);
   $folders = _media_browser_plus_filter_folders($folders);
   $list = _media_browser_plus_create_relationship_list($folders, TRUE);
   $folders = _media_browser_plus_folder_hierarchy_list($list);
+
+  form_load_include($form_state, 'inc', 'media_browser_plus', 'includes/file_entity.admin');
+
   // Build the folder form.
   $form['admin']['folder'] = array(
     '#type' => 'markup',
@@ -1823,13 +1826,15 @@ function media_browser_plus_main_view_javascript_settings() {
 /**
  * Appends the media basket.
  */
-function media_browser_plus_media_basket_form($library_mode = FALSE) {
+function media_browser_plus_media_basket_form($library_mode = FALSE, &$form_state = array()) {
   $header = array(array('data' => t('Media Basket')));
   $form['basket_actions'] = array();
   $form['basket_actions']['selection_assets'] = array(
     '#type' => 'markup',
     '#markup' => '<a href="#media_basket_table" id="media_basket_remove_all" >' . t('Remove All') . '</a>',
   );
+
+  form_load_include($form_state, 'inc', 'media_browser_plus', 'includes/file_entity.admin');
 
   if ($library_mode) {
     $form['basket_actions']['select'] = _media_browser_plus_media_basket_select_button();
