@@ -70,14 +70,14 @@ function media_browser_plus_media_preview($form, &$form_state, $media) {
     // echo drupal_render($form['preview']);
     list($sx, $sy) = getimagesize(drupal_realpath($media->uri));
     if ($sx > $max_width) {
-      $ratio = bcdiv($max_width, $sx, 5);
+      $ratio = round(($max_width / $sx), 5);
       $sx = $max_width;
-      $sy = bcmul($sy, $ratio, 0);
+      $sy = round(($sy * $ratio), 0);
     }
     if ($sy > $max_height) {
-      $ratio = bcdiv($max_height, $sy, 5);
+      $ratio = round(($max_height / $sy), 5);
       $sy = $max_height;
-      $sx = bcmul($sx, $ratio, 0);
+      $sx = round(($sx * $ratio), 0);
     }
     $uri = '';
     if (strstr($media->uri, 'private://')) {

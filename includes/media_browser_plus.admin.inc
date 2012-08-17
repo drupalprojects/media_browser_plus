@@ -21,7 +21,7 @@ function media_browser_plus_folder_media_import($root, $dir, &$context) {
   }
   // Look how far we got and where we have to resume.
   $media_start = $context['sandbox']['progress'];
-  $page = $media_start == 0 ? 0 : bcdiv($media_start, $per_page, 0);
+  $page = $media_start == 0 ? 0 : round(($media_start / $per_page), 0);
 
   if (!isset($context['results'])) {
     $context['results'] = array('success' => array(), 'errors' => array());
