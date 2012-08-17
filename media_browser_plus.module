@@ -153,8 +153,17 @@ function media_browser_plus_thumbnailsJSON() {
 
 /**
  * Implements hook_form_FORM_ID_alter() for media_add_upload_multiple().
+ *
+ * @deprecated Remove once >= Media7.x-2.0-unstable5 is wide spread.
  */
 function media_browser_plus_form_media_add_upload_multiple_alter(&$form, &$form_state) {
+  media_browser_plus_form_file_entity_add_upload_multiple_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for file_entity_add_upload_multiple().
+ */
+function media_browser_plus_form_file_entity_add_upload_multiple_alter(&$form, &$form_state) {
   // This builds the tags textfield and adds the autocomplete handlers to it.
   // The #element_validate may not be necessary because this never triggers
   // hook_field_update() or hook_field_insert()
@@ -278,14 +287,14 @@ function media_browser_plus_media_import_batch_complete($success, $results, $ope
  */
 function media_browser_plus_form_media_internet_add_alter(&$form, &$form_state) {
   // Add an additional form submission callback that fires after the default.
-  media_browser_plus_form_media_add_upload_alter($form, $form_state);
+  media_browser_plus_form_file_entity_add_upload_alter($form, $form_state);
 }
 
 /**
  * Form element validate handler for taxonomy term autocomplete element.
  *
- * Because media_browser_plus_form_media_add_upload_multiple_alter() adds a
- * tags widget to a form that is not an entity editing form, but it is desired
+ * Because media_browser_plus_form_file_entity_add_upload_multiple_alter() adds
+ * a tags widget to a form that is not an entity editing form, but it is desired
  * for taxonomy_autocomplete_validate() to have access to the settings of the
  * field for which this widget is being added, this handler runs before
  * taxonomy_autocomplete_validate(), and adds the expected information to
@@ -310,7 +319,7 @@ function media_browser_plus_prepare_taxonomy_autocomplete_validate(&$element, &$
  * created entities from user-submitted data and/or data available from a
  * remote provider.
  *
- * @see media_browser_plus_form_media_add_upload_multiple_alter()
+ * @see media_browser_plus_form_file_entity_add_upload_multiple_alter()
  * @see media_browser_plus_form_media_internet_add_alter()
  */
 function media_browser_plus_submit($form, &$form_state) {
@@ -470,8 +479,20 @@ function media_browser_plus_preprocess_media_thumbnail(&$variables) {
  * Implements hook_form_FORM_ID_alter() for media_add_upload().
  *
  * Altering the add file upload form the include folder and tag options
+ *
+ * @deprecated Remove once >= Media7.x-2.0-unstable5 is wide spread.
  */
 function media_browser_plus_form_media_add_upload_alter(&$form, &$form_state) {
+  media_browser_plus_form_file_entity_add_upload_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for file_entity_add_upload().
+ *
+ * Altering the add file upload form the include folder and tag options
+ *
+ */
+function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_state) {
   // Alter weight to display new forms in correct order.
   $form['file']['#weight'] = -5;
   $form['submit']['#weight'] = 5;
