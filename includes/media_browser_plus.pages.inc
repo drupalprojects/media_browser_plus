@@ -121,6 +121,10 @@ function media_browser_plus_media_preview_submit($form, &$form_state) {
  *
  */
 function media_browser_plus_media_filter() {
+
+  // Suppress the admin menu toolbar.
+  module_invoke('admin_menu', 'suppress');
+
   $form = array();
   $path = drupal_get_path('module', 'media_browser_plus');
   $form['#attached']['js'][] = $path . '/js/media_browser_plus.filter.js';
