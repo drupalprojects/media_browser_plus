@@ -247,6 +247,10 @@
       $('#media_browser_plus_pages').append($page_item);
     },
     folderContentsLoaded: function (data) {
+      // Skip if there are no data.
+      if (!data) {
+        return;
+      }
       var results_count = data['media'].length;
       var overall_count = data['overall_count'];
       var folder = $('#'+data['folder_loaded']);

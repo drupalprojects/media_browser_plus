@@ -23,6 +23,11 @@ function media_browser_plus_form_file_entity_admin_files_alter(&$form, &$form_st
     'type' => 'setting',
     'data' => $settings,
   );
+  // Adding extended js and css.
+  $form['#attached']['js'][] = $path . '/js/media_browser_plus.admin.js';
+  drupal_add_library('system', 'ui.draggable');
+  drupal_add_library('system', 'ui.droppable');
+
   // Check which mode we are in.
   $menu_item = menu_get_item();
   if (!isset($menu_item['map'][3]) || $menu_item['map'][3] != 'thumbnails') {
@@ -34,10 +39,7 @@ function media_browser_plus_form_file_entity_admin_files_alter(&$form, &$form_st
     drupal_access_denied();
     return array();
   }
-  // Adding grid view js and css.
-  $form['#attached']['js'][] = $path . '/js/media_browser_plus.admin.js';
-  drupal_add_library('system', 'ui.draggable');
-  drupal_add_library('system', 'ui.droppable');
+
   // Removing options form part.
   unset($form['options']);
   if (!media_browser_plus_access('media list view')
