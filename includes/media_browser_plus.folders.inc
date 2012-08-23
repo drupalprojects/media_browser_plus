@@ -15,8 +15,8 @@ function media_browser_plus_folder_list($form, &$form_state) {
   $form['action-links'] = array(
     '#type' => 'markup',
     '#markup' => '<ul class="action-links"><li>' .
-      l(t('Add new folder'), 'admin/content/file/add_folder', array('query' => $destination)) .
-       '</li></ul>',
+    l(t('Add new folder'), 'admin/content/file/add_folder', array('query' => $destination)) .
+    '</li></ul>',
   );
   $header = array(
     'name' => array(
@@ -44,7 +44,14 @@ function media_browser_plus_folder_list($form, &$form_state) {
   if (empty($rows)) {
     $rows[] = array(array('data' => t('No folders created yet.'), 'colspan' => '5'));
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'folder-overview')));
+  $output = theme(
+    'table',
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id' => 'folder-overview'),
+    )
+  );
   $form['admin'] = array(
     '#type' => 'markup',
     '#markup' => $output,
@@ -75,7 +82,7 @@ function media_browser_plus_folder_list_submit($form, &$form_state) {
       taxonomy_term_save($folder);
       $destination = media_browser_plus_construct_dir_path($folder);
       if ($source != $destination) {
-        // update physical folder structure
+        // Update physical folder structure.
         media_browser_plus_move_physical_folder($source, $destination);
       }
     }
@@ -213,6 +220,7 @@ function media_browser_plus_folder_add_submit_continue($form, &$form_state) {
  */
 function media_browser_plus_folder_edit($form, &$form_state, $folder) {
   $parents = taxonomy_get_parents($folder->tid);
+  $parents_keys = array_keys($parents);
   $form['folder'] = array(
     '#type' => 'fieldset',
     '#title' => t('New Folder'),
@@ -239,7 +247,7 @@ function media_browser_plus_folder_edit($form, &$form_state, $folder) {
       '#type' => 'select',
       '#title' => t('Parent Category'),
       '#options' => media_browser_plus_folder_get_folders(),
-      '#default_value' => count($parents) ? array_pop(array_keys($parents)) : 0,
+      '#default_value' => count($parents) ? array_pop($parents_keys) : 0,
       '#description' => t('Sets one parent folder for the new folder'),
     ),
   );
@@ -266,15 +274,21 @@ function media_browser_plus_folder_edit($form, &$form_state, $folder) {
 }
 
 /**
- * @todo Document what this function is does.
- *
- * @param $form
- * @param $form_state
+ * Validator for the settings form of the folder management.
+ */
+function media_browser_plus_folder_edit_validate($form, &$form_state) {
+  if ($form_state['values']['pid'] == $form_state['values']['folder_id']) {
+    form_set_error('pid', t('You cannot select a folder as parent of itself.'));
+  }
+}
+
+/**
+ * Submit handler for the settings form of the folder management.
  */
 function media_browser_plus_folder_edit_submit($form, &$form_state) {
   // Save folder.
   media_browser_plus_folder_save_folder($form_state);
-  // go back.
+  // Go back.
   $destination = drupal_get_destination();
   $form_state['redirect'] = $destination['destination'];
 }
@@ -315,7 +329,7 @@ function media_browser_plus_folder_delete($form, &$form_state, $folder) {
       '#type' => 'item',
       '#markup' => $folder->name,
       '#prefix' => '<ul><li>',
-      '#suffix' => '</ul></li>'
+      '#suffix' => '</ul></li>',
     );
     $form['note'] = array(
       '#type' => 'item',
@@ -375,9 +389,6 @@ function media_browser_plus_folder_delete_submit($form, &$form_state) {
 
 /**
  * @todo Document what this function is does.
- *
- * @param $form
- * @param $form_state
  */
 function media_browser_plus_folder_save_folder($form_state) {
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
@@ -405,6 +416,7 @@ function media_browser_plus_folder_save_folder($form_state) {
         drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
       }
       break;
+
     case SAVED_UPDATED:
       // Update physical folder.
       $destination = media_browser_plus_construct_dir_path($term);
@@ -413,7 +425,7 @@ function media_browser_plus_folder_save_folder($form_state) {
         // Update files in folder and subfolders get folders.
         $folders = array($term->tid);
         $sub_folders = taxonomy_get_children($term->tid);
-        // Add subfolders if found
+        // Add subfolders if found.
         foreach ($sub_folders as $sf) {
           $folders[] = $sf->tid;
         }
@@ -425,12 +437,13 @@ function media_browser_plus_folder_save_folder($form_state) {
             array('media_browser_plus_folder_update_file_locations_batch', array($folders)),
           ),
           'finished' => 'media_browser_plus_folder_update_file_locations_batch_complete',
-          'file' => $path . '/includes/media_browser_plus.folders.inc'
+          'file' => $path . '/includes/media_browser_plus.folders.inc',
         );
         batch_set($batch);
       }
       drupal_set_message(t('Folder %term_name updated successfully', array('%term_name' => $term->name)));
       break;
+
     case FALSE:
       drupal_set_message(t('Error saving folder %term_name', array('%term_name' => $term->name)), 'error');
       break;
@@ -439,7 +452,6 @@ function media_browser_plus_folder_save_folder($form_state) {
 
 /**
  * @todo Document what this function is does.
- *
  */
 function media_browser_plus_folder_get_folders() {
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
@@ -493,7 +505,11 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
   $per_page = 25;
   $conditions = array();
   $conditions[] = array('field' => array('field_folder', 'tid', $folders, 'IN'));
-  $options = array('apply_filter' => FALSE, 'count_only' => TRUE, 'conditions' => $conditions);
+  $options = array(
+    'apply_filter' => FALSE,
+    'count_only' => TRUE,
+    'conditions' => $conditions,
+  );
   $media_count = media_browser_plus_load_multiple($options);
 
   if (empty($context['sandbox'])) {
@@ -508,7 +524,14 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
     $context['results'] = array('success' => array(), 'errors' => array());
   }
   $order = array(array('property' => array('fid', 'ASC')));
-  $attributes = array('apply_filter' => FALSE, 'paging' => TRUE, 'per_page' => $per_page, 'page' => $page, 'order' => $order, 'conditions' => $conditions);
+  $attributes = array(
+    'apply_filter' => FALSE,
+    'paging' => TRUE,
+    'per_page' => $per_page,
+    'page' => $page,
+    'order' => $order,
+    'conditions' => $conditions,
+  );
   $media_query = media_browser_plus_load_multiple($attributes);
   // Checking media.
   foreach ($media_query->results as $media) {
@@ -533,7 +556,7 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
 }
 
 /**
- * Called on completion of the batch
+ * Called on completion of the batch.
  *
  * @param type $success
  * @param type $results
