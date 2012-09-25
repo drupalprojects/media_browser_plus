@@ -163,8 +163,6 @@ function media_browser_plus_enable() {
  * @TODO: discuss if this should be done
  */
 function media_browser_plus_uninstall() {
-  field_delete_field('field_folder');
-  field_delete_field('field_tags');
   variable_del('media_media_per_page');
   variable_del('media_grid_window_height');
   variable_del('media_page_items_per_page');
