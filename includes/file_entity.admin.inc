@@ -30,7 +30,11 @@ function media_browser_plus_form_file_entity_admin_files_alter(&$form, &$form_st
 
   // Check which mode we are in.
   $menu_item = menu_get_item();
-  if (!isset($menu_item['map'][3]) || $menu_item['map'][3] != 'thumbnails') {
+  $show_list_browser = (!isset($menu_item['map'][3]) || $menu_item['map'][3] != 'thumbnails');
+  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE) && !empty($menu_item['map']) && count($menu_item['map']) == 3) {
+    $show_list_browser = FALSE;
+  }
+  if ($show_list_browser) {
     return _media_browser_plus_media_admin_list_alter($form, $form_state);
   }
 

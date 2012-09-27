@@ -691,6 +691,12 @@ function media_browser_plus_menu_alter(&$items) {
   $items['admin/content/file']['access arguments'] = array('access media backend');
   $items['admin/content/file/thumbnails']['access arguments'] = array('access media backend');
   $items['admin/content/file/thumbnails']['access callback'] = array('media_browser_plus_access');
+
+  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE)) {
+    $items['admin/content/file/list'] += $items['admin/content/file/thumbnails'];
+    $items['admin/content/file/list']['type'] = MENU_LOCAL_TASK | MENU_NORMAL_ITEM;
+    $items['admin/content/file/thumbnails']['type'] = MENU_DEFAULT_LOCAL_TASK;
+  }
 }
 
 /**
@@ -1330,7 +1336,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
   $form = array(
     'media_per_page' => array(
       '#type' => 'textfield',
-      '#title' => 'Media Items per page',
+      '#title' => t('Media Items per page'),
       '#description' => t('Insert a number higher than one for the amount of media items displayed per page.'),
       '#default_value' => variable_get('media_media_per_page', 30),
       '#maxlength' => 4,
@@ -1338,7 +1344,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     ),
     'grid_window_height' => array(
       '#type' => 'textfield',
-      '#title' => 'Grind Window Height',
+      '#title' => t('Grind Window Height'),
       '#default_value' => variable_get('media_grid_window_height'),
       '#description' => t('Set a maximum height of pixels for the media grid view.'),
       '#maxlength' => 4,
@@ -1346,7 +1352,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     ),
     'page_items_per_page' => array(
       '#type' => 'textfield',
-      '#title' => 'Page Items per page',
+      '#title' => t('Page Items per page'),
       '#default_value' => variable_get('media_page_items_per_page'),
       '#description' => t('Set how many page items you want in the paging navigation of each page.'),
       '#maxlength' => 4,
@@ -1354,7 +1360,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     ),
     'max_filesize' => array(
       '#type' => 'textfield',
-      '#title' => 'Upload Maximum Filesize',
+      '#title' => t('Upload Maximum Filesize'),
       '#default_value' => media_variable_get('max_filesize'),
       '#description' => t('Standard unit is bytes and therefore can be left out. Otherwise use "NUMBER UNIT"'),
       '#maxlength' => 20,
@@ -1362,11 +1368,17 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     ),
     'root_folder' => array(
       '#type' => 'textfield',
-      '#title' => 'Media Root folder',
+      '#title' => t('Media Root folder'),
       '#default_value' => variable_get('media_root_folder', 'media'),
       '#description' => t('The root folder of uploaded images.Dont use start or end slashes. eg "media/images"'),
       '#required' => TRUE,
     ),
+    'media_browser_plus_thumbnails_as_default_browser' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Use thumbnails view as default.'),
+      '#description' => t('If enabled the thumbnails view will displayed when accessing "admin/content/file".'),
+      '#default_value' => variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE),
+    )
   );
 
   $form['actions'] = array('#type' => 'actions');
