@@ -882,109 +882,78 @@ function media_browser_plus_folder_load($id) {
 /**
  * Creates the folder media tree.
  */
-function _media_browser_plus_folder_hierarchy_list($list) {
-  if (!isset($list['parents']) || !isset($list['children'])) {
-    return;
-  }
-
-  if (count($list['parents']) == 0) {
+function _media_browser_plus_folder_hierarchy_list($folders) {
+  // Only do all the work if there's something to process.
+  if (count($folders) == 0) {
     return t('No folders created yet');
   }
-  else {
-    if (_media_browser_plus_has_unsorted_media()) {
-      $all_folders = array();
-      $all_folders[0] = new stdClass();
-      $all_folders[0]->name = t('Unsorted');
-      $all_folders[0]->tid = 0;
 
-      $list['parents'] = array_merge($all_folders, $list['parents']);
-    }
-    return _media_browser_plus_folder_hierarchy_list_helper($list['parents'], $list['children']);
-  }
-}
-
-/**
- * Builds the html list with the folders.
- */
-function _media_browser_plus_folder_hierarchy_list_helper($parents, &$children, $hide = FALSE) {
-
+  // Create hierarchical structure.
   $path = base_path() . drupal_get_path('module', 'media_browser_plus');
-
-  $buffer = '<ul' . (($hide)? ' class="hidden"' : '') . '>' . "\n";
+  $pixel_img = '<img src="' . $path . '/images/pixel.gif" border="0" alt="">';
 
   // Check if there's a folder requested.
   $folder_id = (isset($_REQUEST['folder'])) ? (int) $_REQUEST['folder']: NULL;
 
-  foreach ($parents as $item) {
-    $has_children = isset($children[$item->tid]);
-    $has_media = _media_browser_plus_folder_empty($item->tid) || $item->tid == 0;
+  // List items.
+  $list_items = array();
+  // Keeps an array with all the folders referenced into the list.
+  $all_items = array();
+  foreach ($folders as $folder) {
+    $has_media = _media_browser_plus_folder_empty($folder->tid) || $folder->tid == 0;
 
-    $buffer .= '<li class="media_folder';
-    $selected_folder =  $folder_id == $item->tid;
-    if ($has_children) {
-      $buffer .= ' parent"><div class="folder' .
-      ($has_media ? '' : ' emptyParent') . (($selected_folder) ? ' selectedFolder' : '') . ' folder-children-toggle">' .
-      '<img src="' . $path . '/images/pixel.gif" border="0" alt="">' .
-      '</div><div id="folder_load_' . $item->tid . '" class="folder_load' .
-      ($has_media ? '' : ' emptyFolder') . (($selected_folder) ? ' selectedFolder' : '') . '">' . $item->name . '</div>' . "\n";
-      $buffer .= _media_browser_plus_folder_hierarchy_list_helper($children[$item->tid], $children);
-      $buffer .= '</li>' . "\n";
+    $all_items[$folder->tid] = array(
+      'data' => '<div class="icon">' . $pixel_img  . '</div><div class="drop">' . $folder->name . '</div>',
+      'id' => 'folder_load_' . $folder->tid,
+      'class' => array('folder'),
+    );
+    if (!$has_media) {
+      $all_items[$folder->tid]['class'][] = 'empty';
+    }
+    if ($folder_id == $folder->tid) {
+      $all_items[$folder->tid]['class'][] = 'selected';
+    }
+
+    // Check if this element has to be registered as a child in a parent item.
+    if (!empty($folder->parents) && ($parent_tid = reset($folder->parents)) > 0 && isset($all_items[$parent_tid])) {
+      // Set the children data for the parent. Since the parent is referenced
+      // from the list into all_items the changes will be transfered.
+      $all_items[$parent_tid]['children'][$folder->tid] = &$all_items[$folder->tid];
+      $all_items[$parent_tid]['class']['parent'] = 'parent';
     }
     else {
-      $buffer .= '"><div class="folder' . ($has_media ? '' : ' empty') . (($selected_folder) ? ' selectedFolder' : '') . ' ">' .
-      '<img src="' . $path . '/images/pixel.gif" border="0" alt=""></div> ' .
-      '<div id="folder_load_' . $item->tid . '" class="folder_load' .
-      ($has_media ? '' : ' emptyFolder') . (($selected_folder) ? ' selectedFolder' : '') . '">' . $item->name . '</div></li>' .
-      "\n";
+      // Add referenced data into item list. Later extensions of potential
+      // child elements will affect the whole structure.
+      $list_items[$folder->tid] = &$all_items[$folder->tid];
     }
   }
-  $buffer .= '</ul>' . "\n";
-  return $buffer;
-}
 
-/**
- * @todo Document what this function does.
- *
- * helper function
- */
-function _media_browser_plus_create_relationship_list($categories) {
-  $return = array();
-  $parents = array();
-  $children = array();
-
-  foreach ($categories as $key => $value) {
-    // Root node.
-    if ($value->parents[0] == 0) {
-      // Create parent entry.
-      $parents[$value->tid] = $value;
-      continue;
-    }
-    else {
-      // Create child entry.
-      $children[$value->parents[0]][$value->tid] = $value;
-      continue;
-    }
+  // Add folder for unsorted media if necessary.
+  if (_media_browser_plus_has_unsorted_media()) {
+    array_unshift($list_items, array(
+      'data' => '<div class="icon">' . $pixel_img  . '</div>' . t('Unsorted'),
+      'id' => 'folder_load_0',
+      'class' => array('folder'),
+    ));
   }
-  // If no root parents.
-  if (!count($parents) && count($children)) {
-    foreach ($children as $pid => $parents_children) {
-      if (!isset($parents[$pid])) {
-        // Move child into parent array keeping indexes.
-        foreach ($children[$pid] as $id => $item) {
-          $parents[$id] = $item;
-        }
-        unset($children[$pid]);
-      }
-    }
-  }
-  $return['parents'] = $parents;
-  $return['children'] = $children;
 
-  return $return;
+  // If none of the folders was selected, just select the first one.
+  if (empty($folder_id)) {
+    reset($list_items);
+    $list_items[key($list_items)]['class'][] = 'selected';
+  }
+
+
+  return theme('item_list', array(
+    'items' => $list_items,
+    'attributes' => array('class' => array('media-folder-list')),
+  ));
 }
 
 /**
  * Checks for unsorted (i.e. media not in folders) media.
+ *
+ * @TODO Switch to EntityFieldQuery!!!
  */
 function _media_browser_plus_has_unsorted_media() {
   // Loading media.
@@ -1696,8 +1665,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   $folders = taxonomy_get_tree($vocabulary->vid);
   $folders = _media_browser_plus_filter_folders($folders);
-  $list = _media_browser_plus_create_relationship_list($folders, TRUE);
-  $folders = _media_browser_plus_folder_hierarchy_list($list);
+  $folders = _media_browser_plus_folder_hierarchy_list($folders);
 
   form_load_include($form_state, 'inc', 'media_browser_plus', 'includes/file_entity.admin');
 

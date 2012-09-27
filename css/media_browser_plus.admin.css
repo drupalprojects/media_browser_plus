@@ -29,12 +29,14 @@
 }
 
 #folder li {
+  list-style-type: none;
+  margin: 2px 2px 2px 0px;
   margin-top: 4px;
 }
 
 #folder ul {
   list-style-type: none;
-  margin: 2px 2px 2px 5px;
+  margin: 2px 2px 2px 0px;
   padding: 0px;
 }
 
@@ -44,31 +46,28 @@
   padding: 0px;
 }
 
-#folder .folder {
+#folder li.folder > div.icon {
   background-image: url(../images/icons/folder.png);
   float: left;
   margin-right: 6px;
   width: 24px;
 }
 
-#folder .folder-children-toggle {
+#folder li.parent > div.icon {
   background-image: url(../images/icons/folder-parent.png);
   cursor: pointer;
   float: left;
   margin-right: 6px;
   width: 24px;
+  color: #999;
 }
 
-#folder div.empty{
+#folder li.empty > div.icon {
   background-image: url(../images/icons/folder-empty.png);
 }
 
-#folder div.emptyParent{
+#folder li.empty.parent > div.icon {
   background-image: url(../images/icons/folder-parent-empty.png);
-}
-
-#folder div.emptyFolder {
-  color: #999;
 }
 
 #folder .folder_load:hover {
@@ -84,8 +83,11 @@
   font-weight: bold;
 }
 
-#folder .selectedFolder {
+#folder li.selected {
   font-weight: bold;
+}
+#folder li.selected li {
+  font-weight: normal;
 }
 
 #media-thumb-list .media-item .label-wrapper,
