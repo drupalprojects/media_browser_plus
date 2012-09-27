@@ -273,7 +273,7 @@
             var input = $('input', media);
             // toggle selection
             $('.media-item', media).toggleClass('selected');
-            input.attr('checked', input.attr('checked') == false);
+            input.attr('checked', $('.media-item', media).hasClass('selected'));
             // check for single-selection
             if(!Drupal.settings.media_browser_plus.multiselect) {
               // and remove all other selections
