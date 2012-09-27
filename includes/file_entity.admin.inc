@@ -78,10 +78,16 @@ function media_browser_plus_file_entity_admin_files_validate($form, &$form_state
  * Submit handler for file edit.
  */
 function media_browser_plus_edit_multiple_redirect($form, &$form_state) {
-  $fids = implode(' ', array_keys(array_filter($form_state['values']['files'])));
+  $fids = array_keys(array_filter($form_state['values']['files']));
+  $fid = reset($fids);
+  $fids = implode(' ', $fids);
+  $folder = NULL;
+  if (($file = file_load($fid)) && isset($file->field_folder[LANGUAGE_NONE][0])) {
+    $folder = $file->field_folder[LANGUAGE_NONE][0]['tid'];
+  }
   $form_state['redirect'] = array(
     'admin/content/file/edit_multiple/' . $fids,
-    array('query' => array('destination' => 'admin/content/file/thumbnails')),
+    array('query' => array('destination' => 'admin/content/file/thumbnails?folder=' . $folder)),
   );
 }
 
@@ -89,10 +95,16 @@ function media_browser_plus_edit_multiple_redirect($form, &$form_state) {
  * Submit handler for file deletion.
  */
 function media_browser_plus_delete_multiple_redirect($form, &$form_state) {
-  $fids = implode(' ', array_keys(array_filter($form_state['values']['files'])));
+  $fids = array_keys(array_filter($form_state['values']['files']));
+  $fid = reset($fids);
+  $fids = implode(' ', $fids);
+  $folder = NULL;
+  if (($file = file_load($fid)) && isset($file->field_folder[LANGUAGE_NONE][0])) {
+    $folder = $file->field_folder[LANGUAGE_NONE][0]['tid'];
+  }
   $form_state['redirect'] = array(
     'admin/content/file/delete_multiple/' . $fids,
-    array('query' => array('destination' => 'admin/content/file/thumbnails')),
+    array('query' => array('destination' => 'admin/content/file/thumbnails?folder=' . $folder)),
   );
 }
 

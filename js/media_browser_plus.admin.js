@@ -11,8 +11,7 @@
       var selectedPreviewItems = new Array();
       Drupal.behaviors.media_browser_folders.loadedMedia = new Array();
       // Load active folder
-      Drupal.behaviors.media_browser_folders.loadFolderContents($("div.folder_load:first"), 0);
-      $("div.folder_load:first").addClass('selectedFolder');
+      Drupal.behaviors.media_browser_folders.loadFolderContents($("div.folder_load.selectedFolder"), 0);
       // Bind click handlers.
       // toggle the display of subfolders
       $( "div.folder-children-toggle" ).bind('click', Drupal.behaviors.media_browser_folders.toggleSubfolders);
@@ -209,10 +208,6 @@
       }
     },
     loadFolderContents: function ($item, $page) {
-      // check against double loading of the same folder
-      if($item.hasClass('selectedFolder') && $page == Drupal.settings.media_browser_plus.page) {
-        return;
-      }
       $('.selectedFolder').removeClass('selectedFolder');
       // Set folder as new active folder and set new page
       $item.addClass('selectedFolder');

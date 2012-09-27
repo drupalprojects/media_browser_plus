@@ -904,7 +904,7 @@ function _media_browser_plus_folder_hierarchy_list($list) {
 }
 
 /**
- * @todo Document what this function does.
+ * Builds the html list with the folders.
  */
 function _media_browser_plus_folder_hierarchy_list_helper($parents, &$children, $hide = FALSE) {
 
@@ -912,25 +912,29 @@ function _media_browser_plus_folder_hierarchy_list_helper($parents, &$children, 
 
   $buffer = '<ul' . (($hide)? ' class="hidden"' : '') . '>' . "\n";
 
+  // Check if there's a folder requested.
+  $folder_id = (isset($_REQUEST['folder'])) ? (int) $_REQUEST['folder']: NULL;
+
   foreach ($parents as $item) {
     $has_children = isset($children[$item->tid]);
     $has_media = _media_browser_plus_folder_empty($item->tid) || $item->tid == 0;
 
     $buffer .= '<li class="media_folder';
+    $selected_folder =  $folder_id == $item->tid;
     if ($has_children) {
       $buffer .= ' parent"><div class="folder' .
-      ($has_media ? '' : ' emptyParent') . ' folder-children-toggle">' .
+      ($has_media ? '' : ' emptyParent') . (($selected_folder) ? ' selectedFolder' : '') . ' folder-children-toggle">' .
       '<img src="' . $path . '/images/pixel.gif" border="0" alt="">' .
       '</div><div id="folder_load_' . $item->tid . '" class="folder_load' .
-      ($has_media ? '' : ' emptyFolder') . '">' . $item->name . '</div>' . "\n";
+      ($has_media ? '' : ' emptyFolder') . (($selected_folder) ? ' selectedFolder' : '') . '">' . $item->name . '</div>' . "\n";
       $buffer .= _media_browser_plus_folder_hierarchy_list_helper($children[$item->tid], $children);
       $buffer .= '</li>' . "\n";
     }
     else {
-      $buffer .= '"><div class="folder' . ($has_media ? '' : ' empty') . ' ">' .
+      $buffer .= '"><div class="folder' . ($has_media ? '' : ' empty') . (($selected_folder) ? ' selectedFolder' : '') . ' ">' .
       '<img src="' . $path . '/images/pixel.gif" border="0" alt=""></div> ' .
       '<div id="folder_load_' . $item->tid . '" class="folder_load' .
-      ($has_media ? '' : ' emptyFolder') . '">' . $item->name . '</div></li>' .
+      ($has_media ? '' : ' emptyFolder') . (($selected_folder) ? ' selectedFolder' : '') . '">' . $item->name . '</div></li>' .
       "\n";
     }
   }
