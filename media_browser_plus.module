@@ -744,17 +744,23 @@ function media_browser_plus_permission() {
  * Implements hook_library().
  */
 function media_browser_plus_library() {
-  $library_path = variable_get('media_browser_plus_library_path', 'sites/all/libraries');
+  $colorbox_path = variable_get('media_browser_plus_library_path', FALSE);
+  if ($colorbox_path === FALSE ) {
+    $colorbox_path = module_exists('libraries') ? libraries_get_path('colorbox') : 'sites/all/libraries/colorbox';
+  }
+  else {
+    $colorbox_path .= '/colorbox';
+  }
   $stylesheet = variable_get('media_browser_plus_stylesheet', 'example1');
   $libraries['colorbox'] = array(
     'title' => 'Colorbox',
     'website' => 'http://colorpowered.com/colorbox/',
     'version' => '1.3.9',
     'js' => array(
-      $library_path . '/colorbox/colorbox/jquery.colorbox-min.js' => array(),
+      $colorbox_path . '/colorbox/jquery.colorbox-min.js' => array(),
     ),
     'css' => array(
-      $library_path . '/colorbox/' . $stylesheet . '/colorbox.css' => array(
+      $colorbox_path . '/' . $stylesheet . '/colorbox.css' => array(
         'type' => 'file',
         'media' => 'screen',
       ),
