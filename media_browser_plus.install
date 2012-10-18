@@ -51,8 +51,16 @@ function _media_browser_plus_ensure_field_tags() {
     ),
   );
   _media_browser_plus_ensure_field($field);
+
+  // Latest file entity version.
+  if (function_exists('file_type_get_all_types')) {
+    $file_types = array_keys(file_type_get_all_types());
+  }
+  else {
+    $file_types = array_keys(file_info_file_types());
+  }
   // Ensure instance for each media bundle.
-  foreach (array_keys(file_info_file_types()) as $bundle) {
+  foreach ($file_types as $bundle) {
     $field['bundle'] = $bundle;
     _media_browser_plus_ensure_instance($field);
   }
@@ -95,8 +103,16 @@ function _media_browser_plus_ensure_field_folder() {
     ),
   );
   _media_browser_plus_ensure_field($field);
+
+  // Latest file entity version.
+  if (function_exists('file_type_get_all_types')) {
+    $file_types = array_keys(file_type_get_all_types());
+  }
+  else {
+    $file_types = array_keys(file_info_file_types());
+  }
   // Ensure instance for each media bundle.
-  foreach (array_keys(file_info_file_types()) as $bundle) {
+  foreach ($file_types as $bundle) {
     $field['bundle'] = $bundle;
     _media_browser_plus_ensure_instance($field);
   }
