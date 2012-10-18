@@ -112,6 +112,7 @@ function media_browser_plus_thumbnailsJSON() {
         foreach ($value as $type => $params) {
           foreach ($params as $param) {
             if (is_array($param)) {
+              $valid = !empty($param);
               foreach ($param as $media_type) {
                 if (strlen(trim($media_type)) == 0) {
                   $valid = FALSE;
@@ -148,6 +149,7 @@ function media_browser_plus_thumbnailsJSON() {
       'overall_count' => $media_entities->overall_count,
     );
     drupal_json_output($output);
+    die();
   }
 }
 
