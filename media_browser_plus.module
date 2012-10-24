@@ -847,7 +847,7 @@ function media_browser_plus_media_access($media_entity) {
  * Revokes the general 'view media' == 'download media' access rule.
  * @todo: this function may be obsolete in 2.x
  */
-function media_browser_plus_file_downloa782d_access_alter(&$grants, $field, $entity_type, $entity = NULL) {
+function media_browser_plus_file_download_access_alter(&$grants, $field, $entity_type, $entity = NULL) {
   if ($entity_type == 'file') {
     unset($grants['file']);
   }
@@ -961,20 +961,29 @@ function _media_browser_plus_folder_hierarchy_list($folders) {
 
 /**
  * Checks for unsorted (i.e. media not in folders) media.
- *
- * @TODO Switch to EntityFieldQuery!!!
  */
 function _media_browser_plus_has_unsorted_media() {
-  // Loading media.
-  $entity_controller = entity_get_controller('file');
-  $media_entities = $entity_controller->load(NULL, array(), 0, 100);
 
-  foreach ($media_entities as $media) {
-    if (!isset($media->field_folder[LANGUAGE_NONE][0]['tid'])) {
-      return TRUE;
-    }
-  }
-  return FALSE;
+  // EFQ doesn't work because the field table is used as base table and an inner
+  // join is used?!
+  // $query = new EntityFieldQuery('file');
+  // $result = $query
+  //   ->entityCondition('entity_type', 'file')
+  //   ->propertyCondition('status', 1)
+  //   ->fieldCondition('field_folder', 'tid', '', 'IS NULL')
+  //   ->range(0, 1)
+  //   ->execute();
+  //
+  // In favor of not unnecessarily loading file entities we use a raw query.
+  // *eeeewwh*!
+  $query = db_select('file_managed')
+    ->fields('file_managed', array('fid'))
+    ->condition('uri', db_like('temporary://%'), 'NOT LIKE')
+    ->range(0, 1);
+  $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
+  $result = $query->execute()->fetchCol();
+
+  return !empty($result);
 }
 
 /**
