@@ -140,8 +140,17 @@ function media_browser_plus_thumbnailsJSON() {
       );
     }
     elseif ($folder === 0) {
+      // Get unsorted files. We can't use EFQ conditions because the field
+      // tables are joined using inner join, what excludes unsorted files from
+      // the whole query at all. Thus fetch the fids of the unsorted fields and
+      // use this as condition.
+      $query = db_select('file_managed')
+        ->fields('file_managed', array('fid', 'fid'))
+        ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE');
+      $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
+      $result = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
       $conditions[] = array(
-        'field' => array('field_folder', 'tid', '', 'IS NULL'),
+        'property' => array('fid', $result, 'IN'),
       );
     }
     $order = array(array('property' => array('fid', 'DESC')));
@@ -987,7 +996,7 @@ function _media_browser_plus_has_unsorted_media() {
   // *eeeewwh*!
   $query = db_select('file_managed')
     ->fields('file_managed', array('fid'))
-    ->condition('uri', db_like('temporary://%'), 'NOT LIKE')
+    ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE')
     ->range(0, 1);
   $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
   $result = $query->execute()->fetchCol();
