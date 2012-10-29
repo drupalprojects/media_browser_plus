@@ -513,7 +513,9 @@ function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_sta
  */
 function media_browser_plus_form_file_entity_edit_alter(&$form, &$form_state) {
   // Setting the weight accordingly.
-  $form['field_folder']['#weight'] = $form['field_tags']['#weight'] - 1;
+  if (isset($form['field_tags']['#weight'])) {
+    $form['field_folder']['#weight'] = $form['field_tags']['#weight'] - 1;
+  }
   $form['actions']['cancel'] = array(
     '#type' => 'submit',
     '#value' => t('Cancel'),
