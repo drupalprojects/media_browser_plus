@@ -134,9 +134,16 @@ function media_browser_plus_thumbnailsJSON() {
       }
     }
     // More conditions.
-    $conditions[] = array(
-      'field' => array('field_folder', 'tid', array($folder), 'IN'),
-    );
+    if ($folder) {
+      $conditions[] = array(
+        'field' => array('field_folder', 'tid', array($folder), 'IN'),
+      );
+    }
+    elseif ($folder === 0) {
+      $conditions[] = array(
+        'field' => array('field_folder', 'tid', '', 'IS NULL'),
+      );
+    }
     $order = array(array('property' => array('fid', 'DESC')));
     $media_entities = media_browser_plus_load_multiple(array('conditions' => $conditions, 'order' => $order));
     module_load_include('inc', 'media', 'includes/media.browser');
