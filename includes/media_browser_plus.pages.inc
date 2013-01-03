@@ -37,11 +37,17 @@ function media_browser_plus_edit_multiple_form($fids) {
 }
 
 /**
- * Provide a form to confirm the deletion of multiple file entites.
+ * Provide a form to confirm the deletion of multiple file entities.
  *
- * @param $form
- * @param $form_state
- * @param $fids
+ * @param array $form
+ *   Form array.
+ * @param array $form_state
+ *   Form state array.
+ * @param string $fids
+ *   Space separated list of fids.
+ *
+ * @return array
+ *   Form array.
  */
 function media_browser_plus_delete_multiple_form($form, &$form_state, $fids) {
   $files = array();
@@ -52,7 +58,10 @@ function media_browser_plus_delete_multiple_form($form, &$form_state, $fids) {
   $files = file_load_multiple($files);
 
   module_load_include('inc', 'file_entity', 'file_entity.pages');
-  $form = drupal_get_form('file_multiple_delete_form', $files);
+  // As of http://drupalcode.org/project/file_entity.git/commit/44120f8068af6aa3672f7dbe9c4e15e64767bf2f
+  // the function names changed. Check which function has to be used.
+  $function = (function_exists('file_entity_multiple_delete_form')) ? 'file_entity_multiple_delete_form' : 'file_multiple_delete_form';
+  $form = drupal_get_form($function, $files);
   return $form;
 }
 
