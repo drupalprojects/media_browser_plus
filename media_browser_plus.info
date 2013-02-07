@@ -9,3 +9,5 @@ dependencies[] = multiform
 dependencies[] = colorbox
 
 files[] = includes/MediaBrowserPlusLibrary.inc
+
+files[] = tests/media_browser_plus.test
