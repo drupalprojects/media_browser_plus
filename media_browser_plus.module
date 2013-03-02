@@ -779,6 +779,9 @@ function media_browser_plus_library() {
   $colorbox_path = variable_get('media_browser_plus_library_path', FALSE);
   if ($colorbox_path === FALSE ) {
     $colorbox_path = module_exists('libraries') ? libraries_get_path('colorbox') : 'sites/all/libraries/colorbox';
+    if (is_dir($colorbox_path . '/colorbox')) {
+      $colorbox_path .= '/colorbox';
+    }
   }
   else {
     $colorbox_path .= '/colorbox';
@@ -789,7 +792,7 @@ function media_browser_plus_library() {
     'website' => 'http://colorpowered.com/colorbox/',
     'version' => '1.3.9',
     'js' => array(
-      $colorbox_path . '/colorbox/jquery.colorbox-min.js' => array(),
+      $colorbox_path . '/jquery.colorbox-min.js' => array(),
     ),
     'css' => array(
       $colorbox_path . '/' . $stylesheet . '/colorbox.css' => array(
@@ -1369,7 +1372,7 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     'grid_window_height' => array(
       '#type' => 'textfield',
       '#title' => t('Grind Window Height'),
-      '#default_value' => variable_get('media_grid_window_height'),
+      '#default_value' => variable_get('media_grid_window_height', 400),
       '#description' => t('Set a maximum height of pixels for the media grid view.'),
       '#maxlength' => 4,
       '#required' => TRUE,
@@ -1704,10 +1707,10 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
   // Build the folder form.
   $form['admin']['folder'] = array(
     '#type' => 'markup',
-    '#markup' => '<div id="folder" style="height:' . variable_get('media_grid_window_height') . 'px;">' . $folders . ' </div>',
+    '#markup' => '<div id="folder" style="height:' . variable_get('media_grid_window_height', 400) . 'px;">' . $folders . ' </div>',
   );
   $form['admin']['files']['#prefix'] = '<div class="media-display-thumbnails media-clear clearfix">' .
-    '<ul class="media-list-thumbnails" style="height:' . variable_get('media_grid_window_height') . 'px;">';
+    '<ul class="media-list-thumbnails" style="height:' . variable_get('media_grid_window_height', 400) . 'px;">';
   // Setting up the header.
   $header = array(
     array(
@@ -1776,7 +1779,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
       'categories' => array('data' => drupal_render($form['admin']['folder'])),
       'media' => array(
         'data' => '<div class="media-display-thumbnails media-clear clearfix">' .
-        '<ul class="media-list-thumbnails" id="media-thumb-list" style="height: ' . variable_get('media_grid_window_height') . 'px;">' .
+        '<ul class="media-list-thumbnails" id="media-thumb-list" style="height: ' . variable_get('media_grid_window_height', 400) . 'px;">' .
         '</ul></div>',
       ),
     ),
@@ -1802,7 +1805,10 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
   $table = array(
     'header' => $header,
     'rows' => $options,
-    'attributes' => array('id' => 'media_folder_table'),
+    'attributes' => array(
+      'id' => 'media_folder_table',
+      'class' => array('mbp-item-list'),
+    ),
     'empty' => t('No media added yet.'),
   );
   // Return themed table.
@@ -1894,7 +1900,10 @@ function media_browser_plus_media_basket_form($library_mode = FALSE, &$form_stat
   $table = array(
     'header' => $header,
     'rows' => $options,
-    'attributes' => array('id' => 'media_basket_table'),
+    'attributes' => array(
+      'id' => 'media_basket_table',
+      'class' => array('mbp-item-list'),
+    ),
     'empty' => t('No media added yet.'),
   );
   return array(
