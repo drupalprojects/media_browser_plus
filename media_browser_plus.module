@@ -146,7 +146,8 @@ function media_browser_plus_thumbnailsJSON() {
       // use this as condition.
       $query = db_select('file_managed')
         ->fields('file_managed', array('fid', 'fid'))
-        ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE');
+        ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE')
+        ->isNull('entity_id');
       $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
       $result = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
       $conditions[] = array(
@@ -997,6 +998,7 @@ function _media_browser_plus_has_unsorted_media() {
   $query = db_select('file_managed')
     ->fields('file_managed', array('fid'))
     ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE')
+    ->isNull('entity_id')
     ->range(0, 1);
   $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
   $result = $query->execute()->fetchCol();
