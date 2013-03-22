@@ -2096,12 +2096,14 @@ function media_browser_plus_taxonomy_term_presave($term) {
  * Implements hook_taxonomy_term_insert().
  */
 function media_browser_plus_taxonomy_term_insert($term) {
-  $dir = media_browser_plus_construct_dir_path($term);
-  if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
-    drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
-  }
-  else {
-    drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
+  if ($term->vocabulary_machine_name == 'media_folders') {
+    $dir = media_browser_plus_construct_dir_path($term);
+    if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
+      drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
+    }
+    else {
+      drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
+    }
   }
 }
 
