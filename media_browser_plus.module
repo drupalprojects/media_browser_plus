@@ -2151,19 +2151,21 @@ function media_browser_plus_taxonomy_term_delete($term) {
         'paging' => FALSE,
         'conditions' => $conditions,
       );
-      $files = media_browser_plus_load_multiple($options);
-      $deleted_all_files = TRUE;
-      foreach ($files as $file) {
-        if (!file_delete($file)) {
-          $deleted_all_files = FALSE;
-        }
-      }
       $folder_path = media_browser_plus_construct_dir_path($folder);
-      if ($deleted_all_files) {
-        // This will fail if the folder isn't empty. This should be defensive
-        // enough.
-        if (!@drupal_rmdir($folder_path)) {
-          drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+      if ($files = media_browser_plus_load_multiple($options)) {
+        $all_files_deleted = TRUE;
+        if (!empty($files->results)) {
+          foreach ($files->results as $file) {
+            if (!file_delete($file)) {
+              $all_files_deleted = FALSE;
+            }
+          }
+        }
+        // Also delete the folder when it's empty.
+        if ($all_files_deleted) {
+          if (!@drupal_rmdir($folder_path)) {
+            drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+          }
         }
       }
     }

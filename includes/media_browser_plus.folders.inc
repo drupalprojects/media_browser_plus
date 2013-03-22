@@ -377,7 +377,7 @@ function media_browser_plus_folder_delete_submit($form, &$form_state) {
   // Load folder, delete and return.
   $folder = media_browser_plus_folder_load((int) $form_state['values']['folder_id']);
   $physical_folder = media_browser_plus_construct_dir_path($folder);
-  if (taxonomy_term_delete($folder->tid) && drupal_rmdir($physical_folder)) {
+  if (taxonomy_term_delete($folder->tid)) {
     drupal_set_message(t('Folder %folder_name deleted successfully', array('%folder_name' => $folder->name)));
   }
   else {
