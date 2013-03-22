@@ -2000,7 +2000,7 @@ function _media_browser_plus_media_basket_select_button() {
 function media_browser_plus_construct_dir_path($term = NULL) {
   $path = variable_get('file_default_scheme', 'public') . '://';
   if ($root_folder = variable_get('media_root_folder')) {
-    $path = $root_folder . '/';
+    $path .= $root_folder . '/';
   }
   $root_folder_term = media_browser_plus_get_media_root_folder();
   if ($term) {
