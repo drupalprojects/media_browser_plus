@@ -15,6 +15,16 @@ require_once dirname(__FILE__) . '/includes/file_entity.admin.inc';
 
 
 /**
+ * Implements hook_views_api().
+ */
+function media_browser_plus_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'media_browser_plus') . '/views',
+  );
+}
+
+/**
  * Puts all selected media items into a zip archive and sends it as download.
  *
  * @TODO: check for internet sources etc. Only local files should be parsed.

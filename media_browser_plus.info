@@ -5,9 +5,11 @@ core = 7.x
 
 dependencies[] = media
 dependencies[] = taxonomy
+dependencies[] = views_tree
 dependencies[] = multiform
-dependencies[] = colorbox
+
 
 files[] = includes/MediaBrowserPlusLibrary.inc
+files[] = views/media_browser_plus_views_plugin_style_media_browser.inc
 
 files[] = tests/media_browser_plus.test
