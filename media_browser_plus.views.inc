@@ -53,10 +53,41 @@ function template_preprocess_media_browser_plus_views_view_media_browser(&$vars)
   // Do whatever media itself does.
   template_preprocess_media_views_view_media_browser($vars);
 
-  // No add our own stuff - based on the set options.
-  /*$handler = $vars['view']->style_plugin;
-  $handler->options['type'];*/
-  // Add folder column.
+  $view = $vars['view'];
+
+  // Now add our own stuff - based on the set options.
+  // Add the js / css library.
+  drupal_add_library('media_browser_plus', 'media_browser_plus');
+
+  // Add more information for the JS integration.
+  $vars['options']['view_id'] = $view->name;
+  $vars['options']['view_display_id'] = $view->current_display;
+
+  // Fetch folder filter.
+  if ($view->filter) {
+    foreach ($view->filter as $filter) {
+      if ($filter->is_exposed() && $filter->real_field == 'field_folder_tid') {
+        $vars['options']['folder_filter_id'] = $filter->options['expose']['identifier'];
+      }
+    }
+  }
+
+  // Add settings for the js library.
+  drupal_add_js(array(
+    'mbp' => array(
+      'views' => array(
+        $view->name . ':' . $view->current_display => $vars['options'],
+      ),
+    )),
+    'setting'
+  );
+
+  // Add folders view.
+  // @todo should this be configurable?
+  $vars['folders'] = NULL;
+  if (!empty($vars['options']['show_folders'])) {
+    $vars['folders'] = views_embed_view('media_browser_plus_folders');
+  }
 }
 
 /**

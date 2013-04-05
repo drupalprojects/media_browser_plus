@@ -1,0 +1,49 @@
+/**
+ * Formatting the media browser plus views.
+ */
+
+.view .mbp-folders {
+  float: left;
+  width: 19%;
+}
+
+.view .mbp-folders ol {
+  padding: 0px;
+  margin: 0px;
+  margin-left: 30px;
+}
+
+.view .mbp-folders li,
+.view .mbp-folders li.open {
+  cursor: pointer;
+  list-style-type: none;
+}
+
+.view .mbp-folders li .icon {
+  margin-top: 2px;
+  width: 20px;
+  padding-left: 20px;
+  height: 20px;
+  line-height: 20px;
+  display: inline;
+  background: url('../images/icons/folder.png') no-repeat;
+}
+
+.view .mbp-folders li.active > div.folder-name {
+  background-color: #E0E0E0;
+}
+
+.view .mbp-folders li div.folder-name.drag-hover {
+  background-color: #CCCCCC;
+}
+
+.view .mbp-folders li ol {
+  display: none;
+}
+
+.view .mbp-file-list {
+  float: right;
+  width: 80%;
+  border-left: 1px solid #cccccc;
+  padding-left: 10px;
+}

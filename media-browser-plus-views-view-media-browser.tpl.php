@@ -10,7 +10,13 @@
 ?>
 
 <?php print $wrapper_prefix; ?>
-  <div class="clearfix">
+<div class="clearfix">
+<?php if(!empty($folders)) : ?>
+<div class="mbp-folders">
+  <?php print $folders ?>
+</div>
+<?php endif; ?>
+  <div class="mbp-file-list">
     <?php print $list_type_prefix; ?>
       <?php foreach ($rows as $id => $row): ?>
         <li id="media-item-<?php print $row->fid; ?>" class="<?php print $classes_array[$id]; ?>">
@@ -20,4 +26,5 @@
     <?php print $list_type_suffix; ?>
     <div id="status"></div>
   </div>
+</div>
 <?php print $wrapper_suffix; ?>
