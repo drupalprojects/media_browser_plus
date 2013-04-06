@@ -14,8 +14,105 @@ define('MEDIA_ENTITY_ACCESS_ALLOW', 30);
 function media_browser_plus_views_api() {
   return array(
     'api' => 3,
-    // 'path' => drupal_get_path('module', 'media_browser_plus') . '/views',
   );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function media_browser_plus_menu() {
+  $items['admin/content/file/thumbnailsJSON'] = array(
+    'title' => 'Load Media Entities',
+    'page callback' => 'media_browser_plus_thumbnailsJSON',
+    'page arguments' => array(),
+    'access callback' => 'media_browser_plus_access',
+    'access arguments' => array('view file'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/content/file/%file/move-to-folder/%taxonomy_term'] = array(
+    'title' => 'Load Media Entities',
+    'page callback' => 'media_browser_plus_move_file_callback',
+    'page arguments' => array(3, 5),
+    'access callback' => 'media_browser_plus_access',
+    'delivery callback' => 'drupal_json_output',
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/config/media/media_browser_plus_settings'] = array(
+    'title' => 'Media Browser Plus Settings',
+    'description' => 'Change the behaviour and layout of the media browser plus UI',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('media_browser_plus_media_settings'),
+    'access arguments' => array('administer files'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function media_browser_plus_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  // Add action links on 'admin/content/file/mbp' page.
+  // @todo can this be done in the related view?
+  if ($root_path == 'admin/content/file/mbp') {
+    $item = menu_get_item('file/add');
+    if (!empty($item['access'])) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+        '#weight' => $item['weight'],
+      );
+    }
+    $item = menu_get_item('admin/content/file/import');
+    if (!empty($item['access'])) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+        '#weight' => $item['weight'],
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_library().
+ */
+function media_browser_plus_library() {
+  $path = drupal_get_path('module', 'media_browser_plus');
+  $libraries['media_browser_plus'] = array(
+    'title' => 'Media Browser Plus',
+    'version' => '1',
+    'js' => array(
+      $path . '/js/media_browser_plus.js' => array(),
+    ),
+    'css' => array(
+      $path . '/css/media_browser_plus.views.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+    'dependencies' => array(
+      array('system', 'ui.draggable'),
+      array('system', 'ui.droppable'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_views_bulk_operations_form_alter().
+ *
+ * @param $form
+ * @param $form_state
+ * @param $vbo
+ */
+function media_browser_plus_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
+  if ($vbo instanceof media_browser_plus_views_handler_field_preview) {
+    // Hide form if disabled.
+    if (empty($vbo->options['mbp_settings']['enable_vbo'])) {
+      $form['#access'] = FALSE;
+    }
+  }
 }
 
 /**
@@ -74,224 +171,6 @@ function media_browser_plus_download_images_submit($form, &$form_state) {
   }
 }
 
-
-/**
- * Called by the JS fronted (ajax) to change the folder of a media object.
- */
-function media_browser_plus_change_folder($form, &$form_state) {
-  if (!isset($form_state['input']['media'])) {
-    // @fixme Decide: die() or return.
-    die('');
-    return $form;
-  }
-  // Parse values.
-  $folder = (int) (str_replace('folder_load_', '', $form_state['input']['folder']));
-  $media_id = (int) (str_replace('edit-files-', '', $form_state['input']['media']));
-  if (!$media_id) {
-    // @fixme Decide: die() or return.
-    die('');
-    return $form;
-  }
-  $media = file_load($media_id);
-  // Apply new folder.
-  if (isset($media->field_folder[LANGUAGE_NONE][0]['tid'])) {
-    $media->field_folder[LANGUAGE_NONE][0]['tid'] = $folder;
-  }
-  else {
-    $media->field_folder = array(LANGUAGE_NONE => array(array('tid' => $folder)));
-  }
-
-  // Save changes.
-  media_browser_plus_move_file($folder, $media);
-
-  // @fixme Decide: die() or return.
-  die('');
-  return $form;
-}
-
-/**
- * Called by the JS fronted (ajax) to get the media list for a given folder.
- */
-function media_browser_plus_thumbnailsJSON() {
-  if (isset($_GET['folder'])) {
-    $folder = (int) (str_replace('folder_load_', '', $_GET['folder']));
-    // Create conditions.
-    $conditions = array();
-    // Check for filter set by library.
-    if (isset($_GET['filter'])) {
-      $filter = drupal_json_decode($_GET['filter']);
-      // Bugfix - $conditions = $filter;
-      foreach ($filter as $key => $value) {
-        // Checking each filter.
-        $valid = TRUE;
-        foreach ($value as $type => $params) {
-          foreach ($params as $param) {
-            if (is_array($param)) {
-              $valid = !empty($param);
-              foreach ($param as $media_type) {
-                if (strlen(trim($media_type)) == 0) {
-                  $valid = FALSE;
-                  break;
-                }
-              }
-            }
-            else {
-              if (strlen(trim($param)) == 0) {
-                $valid = FALSE;
-                break;
-              }
-            }
-          }
-        }
-        if ($valid) {
-          $conditions[] = $value;
-        }
-      }
-    }
-    // More conditions.
-    if ($folder) {
-      $conditions[] = array(
-        'field' => array('field_folder', 'tid', array($folder), 'IN'),
-      );
-    }
-    elseif ($folder === 0) {
-      // Get unsorted files. We can't use EFQ conditions because the field
-      // tables are joined using inner join, what excludes unsorted files from
-      // the whole query at all. Thus fetch the fids of the unsorted fields and
-      // use this as condition.
-      $query = db_select('file_managed')
-        ->fields('file_managed', array('fid', 'fid'))
-        ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE')
-        ->isNull('entity_id');
-      $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
-      $result = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
-      $conditions[] = array(
-        'property' => array('fid', $result, 'IN'),
-      );
-    }
-    $order = array(array('property' => array('fid', 'DESC')));
-    $media_entities = media_browser_plus_load_multiple(array('conditions' => $conditions, 'order' => $order));
-    module_load_include('inc', 'media', 'includes/media.browser');
-    foreach ($media_entities->results as $media) {
-      media_browser_build_media_item($media);
-    }
-    $output = array(
-      'media' => array_values($media_entities->results),
-      'folder_loaded' => 'folder_load_' . $folder,
-      'overall_count' => $media_entities->overall_count,
-    );
-    drupal_json_output($output);
-    die();
-  }
-}
-
-/**
- * Implements hook_menu().
- */
-function media_browser_plus_menu() {
-  $items['admin/content/file/thumbnailsJSON'] = array(
-    'title' => 'Load Media Entities',
-    'page callback' => 'media_browser_plus_thumbnailsJSON',
-    'page arguments' => array(),
-    'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('view file'),
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/content/file/%file/move-to-folder/%taxonomy_term'] = array(
-    'title' => 'Load Media Entities',
-    'page callback' => 'media_browser_plus_move_file_to_folder',
-    'page arguments' => array(3, 5),
-    'access callback' => 'media_browser_plus_access',
-    'delivery callback' => 'drupal_json_output',
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/config/media/media_browser_plus_settings'] = array(
-    'title' => 'Media Browser Plus Settings',
-    'description' => 'Change the behaviour and layout of the media browser plus UI',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('media_browser_plus_media_settings'),
-    'access arguments' => array('administer files'),
-  );
-  $items['admin/content/file/%file/preview'] = array(
-    'title' => 'Preview Media',
-    'description' => 'Preview Media Item',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('media_browser_plus_media_preview', 3),
-    'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('preview media'),
-    'file' => 'includes/media_browser_plus.pages.inc',
-  );
-  return $items;
-}
-
-
-/**
- * Implements hook_permission().
- */
-function media_browser_plus_permission() {
-  return array(
-    'media grid view' => array(
-      'title' => t('Grid View'),
-      'description' => t('Allow users to use the grid view.'),
-    ),
-    'media list view' => array(
-      'title' => t('List View'),
-      'description' => t('Allow users to use the list view.'),
-    ),
-    'access media backend' => array(
-      'title' => t('Access media backend'),
-      'description' => t('Allow user to access the media backend according to their privileges.'),
-    ),
-    'upload media' => array(
-      'title' => t('Upload media'),
-      'description' => t('Allow user to add media.'),
-    ),
-    'download files' => array(
-      'title' => t('Download Files'),
-      'description' => t('Allows the user to download the original file items.'),
-    ),
-    'filter media' => array(
-      'title' => t('Filter Media'),
-      'description' => t('Allows the user to filter the displayed media in the backend.'),
-    ),
-    'administer media folders' => array(
-      'title' => t('Administer Media Folders'),
-      // @TODO better description
-      'description' => t('Allows the user to add, edite, delete and resort media folders.'),
-    ),
-    'preview media' => array(
-      'title' => t('Preview media'),
-      // @TODO better description
-      'description' => t('Allows the user to view a configurable preview of the original media item.'),
-    ),
-  );
-}
-
-/**
- * Implements hook_library().
- */
-function media_browser_plus_library() {
-  $path = drupal_get_path('module', 'media_browser_plus');
-  $libraries['media_browser_plus'] = array(
-    'title' => 'Media Browser Plus',
-    'version' => '1',
-    'js' => array(
-      $path . '/js/media_browser_plus.js' => array(),
-    ),
-    'css' => array(
-      $path . '/css/media_browser_plus.views.css' => array(
-        'type' => 'file',
-        'media' => 'screen',
-      ),
-    ),
-    'dependencies' => array(
-      array('system', 'ui.draggable'),
-      array('system', 'ui.droppable'),
-    ),
-  );
-  return $libraries;
-}
-
 /**
  * Move the file to another folder.
  *
@@ -303,10 +182,10 @@ function media_browser_plus_library() {
  * @return bool
  *   FALSE on error.
  */
-function media_browser_plus_move_file_to_folder($file, $folder) {
+function media_browser_plus_move_file_callback($file, $folder) {
   if (empty($file->field_folder[LANGUAGE_NONE][0]['tid']) || $file->field_folder[LANGUAGE_NONE][0]['tid'] != $folder->tid) {
     $file->field_folder[LANGUAGE_NONE] = array(array('tid' => $folder->tid));
-    file_save($file);
+    return media_browser_plus_move_file($folder->tid, $file);
   }
   return TRUE;
 }
@@ -632,62 +511,6 @@ function media_browser_plus_load_multiple($variables) {
 }
 
 /**
- * Looks if a filter is active and filters the folders accordingly.
- *
- * @param array $folders
- *   The folders to filter.
- *
- * @return array
- *   The list with the filtered folders.
- */
-function _media_browser_plus_filter_folders($folders) {
-  // No filter active, return unchanged $folders array.
-  $filtered_folders = $folders;
-  if (isset($_SESSION['media-filter'])) {
-    $folder_filtered = array();
-    // Look through the tree and add elements that match filter.
-    foreach ($folders as $item) {
-      if (in_array($item->tid, $_SESSION['media-filter']['field_folder'])) {
-        $folder_filtered[] = $item;
-      }
-    }
-    $filtered_folders = $folder_filtered;
-  }
-  $filtered_folders = _media_browser_plus_filter_folder_access($filtered_folders);
-  return $filtered_folders;
-}
-
-/**
- * @todo Document what this function does.
- *
- * @param array $folders
- *   The folders to scan.
- *
- * @return array
- *   List with the accessible folders.
- */
-function _media_browser_plus_filter_folder_access($folders) {
-  $temp_folders = $folders;
-  $filtered_folders = array();
-  foreach ($temp_folders as $item) {
-    $access = TRUE;
-    foreach (module_implements('media_folder_access') as $module) {
-      $access = module_invoke($module, 'media_folder_access', $item);
-      if ($access === FALSE) {
-        break;
-      }
-      else {
-        $access = TRUE;
-      }
-    }
-    if ($access) {
-      $filtered_folders[] = $item;
-    }
-  }
-  return $filtered_folders;
-}
-
-/**
  * Creates the media browser plus settings form.
  */
 function media_browser_plus_media_settings($form, &$form_state = array()) {
@@ -792,30 +615,6 @@ function media_browser_plus_media_settings_validate($form, &$form_state) {
 }
 
 /**
- * Implements hook_field_attach_presave().
- *
- * Makes sure all media are in a folder.
- */
-function media_browser_plus_field_attach_presave($entity_type, $entity) {
-  if ($entity_type != 'file') {
-    return;
-  }
-  // Look for folder and set default if none found
-  // $media->field_folder[LANGUAGE_NONE] = array(array('tid' => $form_state['values']['field_folder']));
-  if (!isset($entity->field_folder) ||
-    !isset($entity->field_folder[LANGUAGE_NONE]) ||
-    !count($entity->field_folder[LANGUAGE_NONE]) ||
-    !isset($entity->field_folder[LANGUAGE_NONE][0]['tid']) ||
-    (int) $entity->field_folder[LANGUAGE_NONE][0]['tid'] == 0) {
-
-    // sSt default folder is no folder or incorrect value.
-    $root = media_browser_plus_get_media_root_folder();
-    $entity->field_folder = array();
-    $entity->field_folder[LANGUAGE_NONE] = array(array('tid' => $root->tid));
-  }
-}
-
-/**
  * Check if a given folder has media in it (does include current filter).
  *
  * @param int $folder_id
@@ -880,97 +679,6 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
 }
 
 /**
- * Returns default javascript settings.
- */
-function media_browser_plus_main_view_javascript_settings() {
-  global $base_url;
-  // Gather environment data.
-  $path = drupal_get_path('module', 'media_browser_plus');
-  $url = rtrim(url('', array('absolute' => TRUE)), '/') . '/';
-  // Create default settings.
-  $settings = array(
-    'media_browser_plus' => array(
-      'filter_active' => isset($_SESSION['media-filter']),
-      'url' => $url,
-      'images_url' => $base_url . '/' . $path . '/images/',
-      'page' => isset($_GET['page']) ? $_GET['page'] : 0,
-      'per_page' => variable_get('media_media_per_page', 30),
-      'page_items_per_page' => variable_get('media_page_items_per_page'),
-      'folder_management_url' => url('admin/content/file/folder_list'),
-      'multiselect' => TRUE,
-  // Texts.
-      'messages' => array(
-        'only_one_selection_allowed' => t('Only one media item may be selected'),
-      ),
-  // Access settings.
-      'folder_dnd_enabled' => media_browser_plus_access('edit file'),
-      'manage_folders' => media_browser_plus_access('edit folders'),
-      'filter_allowed' => media_browser_plus_access('filter media'),
-      'add_files' => media_browser_plus_access('upload media'),
-    ),
-  );
-  return $settings;
-}
-
-/**
- * Appends the hidden preview form.
- */
-function media_browser_plus_media_preview_form() {
-  $header = array(
-    array(
-      'data' => t('Media Preview'),
-      'id' => array('media-preview-label'),
-    ),
-  );
-
-  $form['preview_actions'] = array(
-    'previous' => array(
-      '#type' => 'submit',
-      '#value' => t('previous'),
-      '#attributes' => array('id' => 'previous_preview_item'),
-    ),
-    'select' => array(
-      '#type' => 'submit',
-      '#value' => t('Select'),
-      '#attributes' => array('id' => 'select_preview_item'),
-    ),
-    'next' => array(
-      '#type' => 'submit',
-      '#value' => t('next'),
-      '#attributes' => array('id' => 'next_preview_item'),
-    ),
-  );
-
-  $options = array(
-    array(
-      'media' => array(
-        'data' => '',
-        'id' => array('media_browser_plus_preview_content'),
-      ),
-    ),
-    array(
-      'media' => array(
-        'data' => drupal_render($form['preview_actions']),
-        'id' => array('media_browser_plus_preview_panel'),
-      ),
-    ),
-  );
-
-  $table = array(
-    'header' => $header,
-    'rows' => $options,
-    'attributes' => array('id' => 'media-preview-table'),
-    'empty' => t('No media added yet.'),
-  );
-
-  return array(
-    '#type' => 'markup',
-    '#markup' => '<div id="media-preview-table-container" style="display: none;">' . theme('table', $table) . '</div>',
-    'preview_actions' => $form['preview_actions'],
-  );
-}
-
-/**
  * Construct the path of a media_folder term.
  *
  * @param object|NULL $term
@@ -981,7 +689,7 @@ function media_browser_plus_media_preview_form() {
  *   The path to the requested folder. Doesn't have a trailing slash.
  */
 function media_browser_plus_construct_dir_path($term = NULL) {
-  $path = variable_get('file_default_scheme', 'public') . '://';
+  $path = '';
   if ($root_folder = variable_get('media_root_folder')) {
     $path .= $root_folder . '/';
   }
@@ -998,7 +706,7 @@ function media_browser_plus_construct_dir_path($term = NULL) {
       }
     }
   }
-  return rtrim($path, '/');
+  return variable_get('file_default_scheme', 'public') . '://' . rtrim($path, '/');
 }
 
 /**
@@ -1057,8 +765,9 @@ function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAM
     $folder = taxonomy_term_load($tid);
     $path = media_browser_plus_construct_dir_path($folder);
     file_prepare_directory($path, FILE_CREATE_DIRECTORY);
-    file_move($media, $path, $replace);
+    return file_move($media, $path, $replace);
   }
+  return TRUE;
 }
 
 /**

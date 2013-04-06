@@ -3,11 +3,13 @@ description = Provides better UX for the media browser
 package = "Media"
 core = 7.x
 
-dependencies[] = media
+dependencies[] = file_entity
 dependencies[] = taxonomy
 dependencies[] = views_tree
-dependencies[] = multiform
+dependencies[] = views_bulk_operations
 
 files[] = views/media_browser_plus_views_plugin_style_media_browser.inc
+files[] = views/media_browser_plus_views_handler_field_preview.inc
+files[] = views/media_browser_plus_views_handler_field_preview_vbo.inc
 
 files[] = tests/media_browser_plus.test

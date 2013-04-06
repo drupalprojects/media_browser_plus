@@ -14,7 +14,7 @@ function media_browser_plus_views_default_views() {
   $view = media_browser_plus_views_taxonomy_tree();
   $views[$view->name] = $view;
 
-  $view = media_browser_plus_views_browser();
+  $view = media_browser_plus_views_management();
   $views[$view->name] = $view;
 
   return $views;
@@ -120,7 +120,7 @@ function media_browser_plus_views_taxonomy_tree() {
  * @return view
  *   The exported views object.
  */
-function media_browser_plus_views_browser() {
+function media_browser_plus_views_management() {
   $view = new view();
   $view->name = 'media_browser_plus';
   $view->description = 'Default view for the media browser library tab.';
@@ -150,8 +150,8 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['pager']['options']['id'] = '0';
   $handler->display->display_options['style_plugin'] = 'media_browser_plus';
-  $handler->display->display_options['style_options']['items_draggable'] = 1;
   $handler->display->display_options['style_options']['show_media_basket'] = 1;
+  $handler->display->display_options['row_plugin'] = 'fields';
   /* No results behavior: Global: Text area */
   $handler->display->display_options['empty']['area']['id'] = 'area';
   $handler->display->display_options['empty']['area']['table'] = 'views';
@@ -159,14 +159,12 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'No files found';
   $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
-  /* Field: File: Name */
-  $handler->display->display_options['fields']['filename']['id'] = 'filename';
-  $handler->display->display_options['fields']['filename']['table'] = 'file_managed';
-  $handler->display->display_options['fields']['filename']['field'] = 'filename';
-  $handler->display->display_options['fields']['filename']['label'] = '';
-  $handler->display->display_options['fields']['filename']['alter']['word_boundary'] = FALSE;
-  $handler->display->display_options['fields']['filename']['alter']['ellipsis'] = FALSE;
-  $handler->display->display_options['fields']['filename']['link_to_file'] = TRUE;
+  /* Field: Media browser plus: Preview */
+  $handler->display->display_options['fields']['media_browser_plus_preview']['id'] = 'media_browser_plus_preview';
+  $handler->display->display_options['fields']['media_browser_plus_preview']['table'] = 'file_managed';
+  $handler->display->display_options['fields']['media_browser_plus_preview']['field'] = 'media_browser_plus_preview';
+  $handler->display->display_options['fields']['media_browser_plus_preview']['label'] = '';
+  $handler->display->display_options['fields']['media_browser_plus_preview']['element_label_colon'] = FALSE;
   /* Sort criterion: File: Upload date */
   $handler->display->display_options['sorts']['timestamp']['id'] = 'timestamp';
   $handler->display->display_options['sorts']['timestamp']['table'] = 'file_managed';
@@ -194,11 +192,13 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['filters']['status']['value'] = array(
     1 => '1',
   );
+  $handler->display->display_options['filters']['status']['group'] = 1;
   /* Filter criterion: File: Name */
   $handler->display->display_options['filters']['filename']['id'] = 'filename';
   $handler->display->display_options['filters']['filename']['table'] = 'file_managed';
   $handler->display->display_options['filters']['filename']['field'] = 'filename';
   $handler->display->display_options['filters']['filename']['operator'] = 'contains';
+  $handler->display->display_options['filters']['filename']['group'] = 1;
   $handler->display->display_options['filters']['filename']['exposed'] = TRUE;
   $handler->display->display_options['filters']['filename']['expose']['operator_id'] = 'filename_op';
   $handler->display->display_options['filters']['filename']['expose']['label'] = 'File name';
@@ -208,6 +208,7 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['filters']['type']['id'] = 'type';
   $handler->display->display_options['filters']['type']['table'] = 'file_managed';
   $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['group'] = 1;
   $handler->display->display_options['filters']['type']['exposed'] = TRUE;
   $handler->display->display_options['filters']['type']['expose']['operator_id'] = 'type_op';
   $handler->display->display_options['filters']['type']['expose']['label'] = 'Type';
@@ -220,6 +221,7 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['filters']['field_folder_tid']['value'] = array(
     1 => '1',
   );
+  $handler->display->display_options['filters']['field_folder_tid']['group'] = 1;
   $handler->display->display_options['filters']['field_folder_tid']['exposed'] = TRUE;
   $handler->display->display_options['filters']['field_folder_tid']['expose']['operator_id'] = 'field_folder_tid_op';
   $handler->display->display_options['filters']['field_folder_tid']['expose']['label'] = 'Media Folder';
@@ -244,15 +246,16 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['filters']['field_folder_tid']['hierarchy'] = 1;
 
   /* Display: Media browser */
-  $handler = $view->new_display('media_browser', 'Media browser', 'media_browser_1');
+  $handler = $view->new_display('media_browser', 'Media browser', 'media_browser_thumbnails');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'Library (MBP)';
   $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
 
-  /* Display: My files MBP */
-  $handler = $view->new_display('media_browser', 'My files MBP', 'media_browser_my_files');
+  /* Display: My files */
+  $handler = $view->new_display('media_browser', 'My files', 'media_browser_my_files');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'My files (MBP)';
+  $handler->display->display_options['enabled'] = FALSE;
   $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
   $handler->display->display_options['defaults']['access'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
@@ -298,6 +301,89 @@ function media_browser_plus_views_browser() {
   $handler->display->display_options['filters']['uid_current']['field'] = 'uid_current';
   $handler->display->display_options['filters']['uid_current']['relationship'] = 'uid';
   $handler->display->display_options['filters']['uid_current']['value'] = '1';
+
+  /* Display: Media Browser Plus */
+  $handler = $view->new_display('page', 'Media Browser Plus', 'media_browser_plus');
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Media browser plus: Preview with operations */
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['id'] = 'media_browser_plus_preview_vbo';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['table'] = 'file_managed';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['field'] = 'media_browser_plus_preview_vbo';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['label'] = '';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['vbo_settings']['display_type'] = '0';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['vbo_settings']['enable_select_all_pages'] = 0;
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['vbo_settings']['force_single'] = 0;
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['vbo_settings']['entity_load_capacity'] = '10';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['vbo_operations'] = array(
+    'action::views_bulk_operations_archive_action' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+      'settings' => array(
+        'scheme' => 'public',
+        'temporary' => 1,
+      ),
+    ),
+    'action::views_bulk_operations_delete_item' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+    ),
+    'action::views_bulk_operations_script_action' => array(
+      'selected' => 0,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+    ),
+    'action::views_bulk_operations_modify_action' => array(
+      'selected' => 0,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+      'settings' => array(
+        'show_all_tokens' => 1,
+        'display_values' => array(
+          '_all_' => '_all_',
+        ),
+      ),
+    ),
+    'action::views_bulk_operations_argument_selector_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+      'settings' => array(
+        'url' => '',
+      ),
+    ),
+    'action::system_send_email_action' => array(
+      'selected' => 0,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+    ),
+    'action::panelizer_set_status_action' => array(
+      'selected' => 0,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+    ),
+  );
+  $handler->display->display_options['path'] = 'admin/content/file/mbp';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Thumbnails Plus';
+  $handler->display->display_options['menu']['weight'] = '0';
+  $handler->display->display_options['menu']['name'] = 'management';
+  $handler->display->display_options['menu']['context'] = 0;
   $translatables['media_browser_plus'] = array(
     t('Master'),
     t('more'),
@@ -323,9 +409,10 @@ function media_browser_plus_views_browser() {
     t('Media Folder (field_folder)'),
     t('Media browser'),
     t('Library (MBP)'),
-    t('My files MBP'),
+    t('My files'),
     t('My files (MBP)'),
     t('User who uploaded'),
+    t('Media Browser Plus'),
   );
   return $view;
 }

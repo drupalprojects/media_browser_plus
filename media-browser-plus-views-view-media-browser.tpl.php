@@ -19,8 +19,8 @@
   <div class="mbp-file-list">
     <?php print $list_type_prefix; ?>
       <?php foreach ($rows as $id => $row): ?>
-        <li id="media-item-<?php print $row->fid; ?>" class="<?php print $classes_array[$id]; ?>">
-          <?php print $row->preview; ?>
+        <li id="media-item-<?php print $view->result[$id]->fid; ?>" class="<?php print $classes_array[$id]; ?>">
+          <?php print $row; ?>
         </li>
       <?php endforeach; ?>
     <?php print $list_type_suffix; ?>

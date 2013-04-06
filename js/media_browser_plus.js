@@ -28,7 +28,7 @@
     var plugin = this;
     this.element.find('.mbp-folders li').bind('click.mbp', function(e) {
       // A click on the icon just opens the folder structure.
-      if (!$(event.target).hasClass('icon')) {
+      if (!$(e.target).hasClass('icon')) {
         plugin.loadFiles($(this).children('div.folder-name').attr('class').replace(plugin.options.folderIdRegexp, '$1'));
       }
       else {
@@ -55,15 +55,25 @@
 
     // Enable drag n drop.
     if (this.options.files_draggable) {
-      this.element.find( ".mbp-file-list li").draggable({
+      this.element.find('.mbp-file-list li').draggable({
         iframeFix: true,
         opacity: 0.7,
         revert: 'invalid',
-        zIndex: 999
+        zIndex: 999,
+        helper: function(){
+          // Support grouping of draggables.
+          var selected = plugin.element.find('li:has(input.vbo-select:checked)');
+          if (selected.length === 0) {
+            selected = $(this);
+          }
+          var container = $('<div/>').attr('id', 'draggingContainer');
+          container.append(selected.clone());
+          return container;
+        }
       });
     }
     if (this.options.folders_draggable) {
-//      this.element.find( ".mbp-folders li").draggable({
+//      this.element.find('.mbp-folders li').draggable({
 //        iframeFix: true,
 //        opacity: 0.7,
 //        revert: 'invalid'
@@ -78,21 +88,25 @@
             window.clearTimeout(ui.helper.data('mbpDragHoverTimeout'));
           }
           var target = $(this);
-          var file_id = ui.draggable.attr('id').replace(plugin.options.fileIdRegexp, '$1');
           var folder_id = target.attr('class').replace(plugin.options.folderIdRegexp, '$1');
-          var url = Drupal.settings.basePath + 'admin/content/file/' + file_id + '/move-to-folder/' + folder_id;
-          // Add throbber to folder.
-          target.prepend('<div class="ajax-progress ajax-progress-throbber media-item-' + file_id + '"><div class="throbber">&nbsp;</div></div>');
-          ui.draggable.remove();
-          $.ajax({
-            url: url,
-            success: function(data) {
-              target.find('.ajax-progress.media-item-' + file_id).remove();
-            },
-            error: function(data) {
-              alert(Drupal.t('An error occured, please refresh the page and try again.'));
-              target.find('.ajax-progress.media-item-' + file_id).remove();
-            }
+          // Since we support grouping of draggables iterate over each item.
+          ui.helper.find('li').each(function(index, item){
+            item = $(item);
+            var file_id = item.attr('id').replace(plugin.options.fileIdRegexp, '$1');
+            var url = Drupal.settings.basePath + 'admin/content/file/' + file_id + '/move-to-folder/' + folder_id;
+            // Add throbber to folder.
+            target.prepend('<div class="ajax-progress ajax-progress-throbber media-item-' + file_id + '"><div class="throbber">&nbsp;</div></div>');
+            plugin.element.find('#' + item.attr('id')).remove();
+            $.ajax({
+              url: url,
+              success: function(data) {
+                target.find('.ajax-progress.media-item-' + file_id).remove();
+              },
+              error: function(data) {
+                alert(Drupal.t('An error occured, please refresh the page and try again.'));
+                target.find('.ajax-progress.media-item-' + file_id).remove();
+              }
+            });
           });
         },
 
@@ -117,10 +131,31 @@
 
       });
     }
+
+    this.element.find('.mbp-file-list li:has(.vbo-select)').bind('click.mbp', function(e) {
+      if (!$(e.target).hasClass('vbo-select')) {
+        $(this).find('input.vbo-select')
+          .attr('checked', !$(this).find('input.vbo-select').attr('checked'))
+          .trigger('change');
+      }
+    });
+    this.element.find('.mbp-file-list li input.vbo-select').bind('change.mbp', function(e) {
+      var media_item = plugin.element.find('#media-item-' + this.value + ' .media-item');
+      if (this.checked) {
+        media_item.addClass('selected');
+      }
+      else {
+        media_item.removeClass('selected');
+      }
+    })
+    .hide();
+
   };
 
   MBP.prototype.destroy = function () {
     this.element.find('.mbp-folders li').unbind('.mbp');
+    this.element.find('.mbp-file-list li').unbind('.mbp');
+    this.element.find('.mbp-file-list li input.vbo-select').unbind('.mbp');
     this.element.find('.mbp-file-list').draggable('destroy');
     this.element.find('.mbp-folders li').draggable('destroy');
     this.element.find('.mbp-folders li').droppable('destroy');

@@ -10,7 +10,10 @@
 .view .mbp-folders ol {
   padding: 0px;
   margin: 0px;
-  margin-left: 30px;
+}
+
+.view .mbp-folders ol ol {
+  padding-left: 15px;
 }
 
 .view .mbp-folders li,
@@ -46,4 +49,12 @@
   width: 80%;
   border-left: 1px solid #cccccc;
   padding-left: 10px;
+}
+
+/**
+ * VBO based field handler
+ */
+div.view-media-browser-plus .media-list-thumbnails .form-type-checkbox {
+  bottom: 0px;
+  left: 0px;
 }
