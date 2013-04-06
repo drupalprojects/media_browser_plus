@@ -100,74 +100,85 @@ function media_browser_plus_library() {
 }
 
 /**
- * Implements hook_views_bulk_operations_form_alter().
- *
- * @param $form
- * @param $form_state
- * @param $vbo
+ * Implements hook_action_info().
  */
-function media_browser_plus_views_bulk_operations_form_alter(&$form, &$form_state, $vbo) {
-  if ($vbo instanceof media_browser_plus_views_handler_field_preview) {
-    // Hide form if disabled.
-    if (empty($vbo->options['mbp_settings']['enable_vbo'])) {
-      $form['#access'] = FALSE;
-    }
+function media_browser_plus_action_info() {
+  // If there's an archiver available provide the download functionality.
+  if (count(archiver_get_info())) {
+    return array(
+      'media_browser_plus_download_action' => array(
+        'type' => 'file',
+        'label' => t('Download file(s)'),
+        'configurable' => TRUE,
+        'vbo_configurable' => TRUE,
+        'triggers' => array('any'),
+      ),
+    );
   }
 }
 
 /**
- * Puts all selected media items into a zip archive and sends it as download.
+ * Configuration form shown to the user before the action gets executed.
  *
- * @TODO: check for internet sources etc. Only local files should be parsed.
- *
- * @param array $form
- *   The form structure.
- * @param array $form_state
- *   The form state.
+ * @todo Replace with proper integration as soon as VBO supports non batch
+ * operations.
  */
-function media_browser_plus_download_images_submit($form, &$form_state) {
-  if (isset($form_state['input']['selected_media']) && media_browser_plus_access('download media')) {
-    $ids = array_keys($form_state['input']['selected_media']);
-    // Only load those.
-    $conditions[] = array('property' => array('fid', array($ids), 'IN'));
-    $media_entities = media_browser_plus_load_multiple(array(
-      'conditions' => $conditions,
-      'apply_filter' => FALSE,
-      'paging' => FALSE,
-    ));
+function media_browser_plus_download_action_form($context, $form_state) {
+  // We hijack the whole process here because there's now way yet to skip the
+  // batch processing in VBO 3.1.
+  $vbo = _views_bulk_operations_get_field($context['view']);
+  $selection = _views_bulk_operations_get_selection($vbo, $form_state);
 
-    // If possible avoid duplicate compression.
-    if (function_exists('apache_setenv')) {
-      @apache_setenv('no-gzip', '1');
-    }
+  $archiver_context = $context;
+  $archiver_context['destination'] = drupal_tempnam('temporary://', 'mbp');
+  $archiver_context['progress']['current'] = count($selection);
+  $archiver_context['progress']['total'] = 1;
+  $archiver_context['settings']['temporary'] = TRUE;
 
-    // Create archive.
-    $name = 'media-download-' . md5(microtime() . uniqid());
-    $zip_file = '/tmp/' . $name . '.zip';
-    $zip = new ZipArchive();
-    $res = $zip->open($zip_file, ZipArchive::CREATE);
-    if ($res === TRUE && count($media_entities->results)) {
-      foreach ($media_entities->results as $media) {
-        $zip->addFile(drupal_realpath($media->uri), $media->filename);
-      }
-      $zip->close();
-      header('Cache-Control: public');
-      header('Pragma: public');
-      header('Expires: 0');
-      header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-      header('Cache-Control: public');
-      // header('Content-Description: File Transfer');
-      header('Content-type: application/zip');
-      header('Content-Disposition: attachment; filename=' . $zip_file);
-      // header('Content-Transfer-Encoding: binary');
-      header('Content-length: ' . filesize($zip_file));
-      readfile($zip_file);
-      drupal_unlink($zip_file);
-      die();
-    }
-    else {
-      drupal_set_message(t('Failed to create download archive'), 'error');
-    }
+  $files = file_load_multiple($selection);
+  foreach ($files as $file) {
+    media_browser_plus_download_action($file, $archiver_context);
+    $archiver_context['progress']['total']++;
+  }
+}
+
+/**
+ * Callback for the action.
+ */
+function media_browser_plus_download_action($file, &$context = array()) {
+
+  // Abuse the existing archiver action. ;)
+  // Make sure it never reaches to progress total to avoid storing a file in the
+  // database.
+  $archiver_context = $context;
+  $archiver_context['progress']['total'] = $context['progress']['total'] + 10;
+  views_bulk_operations_archive_action($file, $archiver_context);
+
+  if ($context['progress']['current'] == $context['progress']['total']) {
+    // Register cleanup function.
+    $cleanup_context = &drupal_static('media_browser_plus_download_action', $context);
+    drupal_register_shutdown_function('media_browser_plus_download_action_cleanup');
+
+    // Ensure we've the latest file information.
+    clearstatcache();
+    // Prepare headers.
+    $headers['Pragma'] = 'public';
+    $headers['Expires'] = '0';
+    $headers['Cache-Control'] = 'must-revalidate, post-check=0, pre-check=0';
+    $headers['Content-type'] = 'application/zip';
+    $headers['Content-Disposition'] = 'attachment; filename=file_download_' . time() . '.zip';
+    $headers['Content-length'] = filesize($context['destination']);
+    file_transfer($context['destination'], $headers);
+  }
+}
+
+/**
+ * Delete temporary download archive.
+ */
+function media_browser_plus_download_action_cleanup() {
+  $cleanup_context = &drupal_static('media_browser_plus_download_action', array());
+  if (isset($cleanup_context['destination'])) {
+    drupal_unlink($cleanup_context['destination']);
   }
 }
 

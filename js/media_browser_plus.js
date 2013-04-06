@@ -47,10 +47,12 @@
     // Initialize the folder structure.
     var currentFolder = this.getFolderFilter().val();
     if (currentFolder) {
-      this.element.find('li:has(>.folder-id-' + currentFolder + ') ol:first').show();
-      this.element.find('li:has(>.folder-id-' + currentFolder + ')').addClass('active');
-      this.element.find('.folder-id-' + currentFolder).show().parents('ol').show();
-      this.element.find('.folder-id-' + currentFolder).show().parents('li').addClass('open');
+      this.element
+        .find('li:has(>.folder-id-' + currentFolder + ')').addClass('active')
+        .find('ol:first').show();
+      var folder = this.element.find('.folder-id-' + currentFolder).show();
+      folder.parents('ol').show();
+      folder.parents('li').addClass('open');
     }
 
     // Enable drag n drop.
@@ -72,6 +74,7 @@
         }
       });
     }
+    // @todo Add folder management.
     if (this.options.folders_draggable) {
 //      this.element.find('.mbp-folders li').draggable({
 //        iframeFix: true,
@@ -153,12 +156,16 @@
   };
 
   MBP.prototype.destroy = function () {
-    this.element.find('.mbp-folders li').unbind('.mbp');
-    this.element.find('.mbp-file-list li').unbind('.mbp');
-    this.element.find('.mbp-file-list li input.vbo-select').unbind('.mbp');
-    this.element.find('.mbp-file-list').draggable('destroy');
-    this.element.find('.mbp-folders li').draggable('destroy');
-    this.element.find('.mbp-folders li').droppable('destroy');
+    this.element.find('.mbp-folders li')
+      .unbind('.mbp')
+      .draggable('destroy')
+      .droppable('destroy');
+    this.element.find('.mbp-file-list li')
+      .unbind('.mbp')
+      .draggable('destroy')
+      .find('input.vbo-select')
+      .unbind('.mbp')
+      .show();
     this.getFolderFilterWrapper().show();
   };
 

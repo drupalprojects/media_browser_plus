@@ -42,11 +42,12 @@ class media_browser_plus_views_plugin_style_media_browser extends media_views_pl
   function options_form(&$form, &$form_state) {
     // parent::options_form($form, $form_state);
 
-    $form['files_draggable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable drag and drop for files'),
-      '#default_value' => $this->options['files_draggable'],
-    );
+    // @todo Add folder management and enable once it's available.
+//    $form['files_draggable'] = array(
+//      '#type' => 'checkbox',
+//      '#title' => t('Enable drag and drop for files'),
+//      '#default_value' => $this->options['files_draggable'],
+//    );
     $form['folders_draggable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable drag and drop for folders'),
