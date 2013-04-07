@@ -11,15 +11,43 @@
     defaults = {
       folderManagementEnabled: false,
       fileIdRegexp: /^.*media-item-([0-9]*).*$/,
-      folderIdRegexp: /^.*folder-id-([0-9]*).*$/
+      folderIdRegexp: /^.*folder-id-([0-9]*).*$/,
+      mbpActionRegexp: /^.*mbp-action-(.*?)( .*|)$/,
+      actions: {}
     };
 
   // The actual plugin constructor
   function MBP( element, options ) {
+    var plugin = this;
     this.element = $(element);
     this.options = $.extend( {}, defaults, options) ;
     this._defaults = defaults;
     this._name = pluginName;
+
+    // Add static methods.
+
+    this.removeItemFromBasket = function(item) {
+      // Extract file id and store it - in cookie and exposed form.
+      var file_id = this.id.replace(plugin.options.fileIdRegexp, '$1');
+      plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val().replace(file_id, '').replace('  ', ' '));
+      $.cookie('Drupal.visitor.mbp.basket', plugin.element.find('input[name=mbp_basket_files]').val());
+      $(this).remove();
+    };
+
+    this.addItemToBasked = function (item) {
+      if (!plugin.element.find('.mbp-file-basket-list').find('#' + item.id).length) {
+        // Extract file id and store it - in cookie and exposed form.
+        var file_id = item.id.replace(plugin.options.fileIdRegexp, '$1');
+        plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val() + ' ' + file_id);
+        $.cookie('Drupal.visitor.mbp.basket', plugin.element.find('input[name=mbp_basket_files]').val());
+        plugin.element.find('.mbp-file-basket-list').append(item);
+        $(item)
+          .click(plugin.removeItemFromBasket)
+          .find('a').click(function(e) {
+            e.preventDefault();
+          });
+      }
+    }
 
     this.init();
   }
@@ -46,6 +74,9 @@
     this.getFolderFilterWrapper().hide();
     // Initialize the folder structure.
     var currentFolder = this.getFolderFilter().val();
+    if (currentFolder == 'All') {
+      currentFolder = this.getFolderFilter().find('option')[1].value;
+    }
     if (currentFolder) {
       this.element
         .find('li:has(>.folder-id-' + currentFolder + ')').addClass('active')
@@ -112,7 +143,6 @@
             });
           });
         },
-
         over: function(event, ui) {
           // Open subfolder after 1 second hovering.
           if (ui.helper.data('mbpDragHoverTimeout')) {
@@ -124,35 +154,77 @@
             plugin.folderOpen(target.parent());
           }, 1000));
         },
-
         out: function(event, ui ) {
           if (ui.helper.data('mbpDragHoverTimeout')) {
             window.clearTimeout(ui.helper.data('mbpDragHoverTimeout'));
             ui.helper.data('mbpDragHoverTimeout', false);
           }
         }
-
       });
     }
 
-    this.element.find('.mbp-file-list li:has(.vbo-select)').bind('click.mbp', function(e) {
-      if (!$(e.target).hasClass('vbo-select')) {
-        $(this).find('input.vbo-select')
-          .attr('checked', !$(this).find('input.vbo-select').attr('checked'))
-          .trigger('change');
-      }
-    });
-    this.element.find('.mbp-file-list li input.vbo-select').bind('change.mbp', function(e) {
-      var media_item = plugin.element.find('#media-item-' + this.value + ' .media-item');
-      if (this.checked) {
-        media_item.addClass('selected');
-      }
-      else {
-        media_item.removeClass('selected');
-      }
-    })
-    .hide();
+    // Make media basked.
+    if (this.options.media_basket ) {
+      this.element.find('.mbp-file-basket-list li')
+        .click(this.removeItemFromBasket);
+      this.element.find('.mbp-file-basket input[name=mbp_basket_files_download]').click(function() {
+        window.setTimeout(function(){
+          plugin.element.find('.mbp-file-basket-list li').trigger('click');
+        }, 1000);
+        window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/download-multiple/' + plugin.element.find('input[name=mbp_basket_files]').val();
+      });
 
+      if (this.options.files_draggable) {
+        this.element.find('.mbp-file-basket').droppable({
+          hoverClass: 'drag-hover',
+          drop: function(event, ui) {
+            var target = $(this);
+            ui.helper.find('li').each(function(index, item){
+              plugin.addItemToBasked(item);
+            });
+          }
+        });
+      }
+    }
+
+    // Hide the vbo checkboxes and handle them by JS.
+    this.element.find('.mbp-file-list li:has(.vbo-select)')
+      .bind('click.mbp', function(e) {
+        if (!$(e.target).hasClass('vbo-select')) {
+          $(this).find('input.vbo-select')
+            .attr('checked', !$(this).find('input.vbo-select').attr('checked'))
+            .trigger('change');
+        }
+      });
+    this.element.find('.mbp-file-list li input.vbo-select')
+      .bind('change.mbp', function(e) {
+        var media_item = plugin.element.find('#media-item-' + this.value + ' .media-item');
+        if (this.checked) {
+          media_item.addClass('selected');
+        }
+        else {
+          media_item.removeClass('selected');
+        }
+      })
+      .hide();
+    // If there are links and vbo selects navigate only on dbl clicks.
+    this.element.find('.mbp-file-list li:has(.vbo-select):has(a)')
+      .bind('dblclick.mbp', function(e) {
+        window.location.href = $(this).find('a').attr('href');
+      })
+      .find('a').bind('click.mbp', function(e) {
+        e.preventDefault();
+      });
+
+    // Register actions
+    for (var action in this.options.actions) {
+      if (this[action + 'Files']) {
+        this.element.find('.mbp-action-' + action).bind('click.mbp',function() {
+          var action = $(this).attr('class').replace(plugin.options.mbpActionRegexp, '$1');
+          plugin[action + 'Files']();
+        });
+      }
+    }
   };
 
   MBP.prototype.destroy = function () {
@@ -167,6 +239,7 @@
       .unbind('.mbp')
       .show();
     this.getFolderFilterWrapper().show();
+    this.element.find('.mbp-action-').unbind('.mbp');
   };
 
   MBP.prototype.getFolderFilter = function () {
@@ -206,11 +279,56 @@
     }
   }
 
+  MBP.prototype.getSelectedFiles = function () {
+    var fids = [];
+    var plugin = this;
+    this.element.find('.mbp-file-list li:has(.media-item.selected)').each(function(i, item) {
+      fids.push(item.id.replace(plugin.options.fileIdRegexp, '$1'));
+    });
+    return fids;
+  }
+
+  MBP.prototype.deleteFiles = function () {
+    var fids = this.getSelectedFiles();
+    if (fids.length) {
+      window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/delete-multiple/' + fids.join(' ');
+    }
+  }
+
+  MBP.prototype.basketFiles = function () {
+    var plugin = this;
+    var items = this.element.find('.mbp-file-list li:has(.media-item.selected)')
+    if (items.length) {
+      items.each(function(index, item) {
+        plugin.addItemToBasked(item);
+      });
+    }
+  }
+
+  MBP.prototype.editFiles = function () {
+    var fids = this.getSelectedFiles();
+    if (fids.length) {
+      window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/edit-multiple/' + fids.join(' ');
+    }
+  }
+
+  MBP.prototype.downloadFiles = function () {
+    var fids = this.getSelectedFiles();
+    if (fids.length) {
+      window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/download-multiple/' + fids.join(' ');
+    }
+  }
+
   $.fn[pluginName] = function ( options ) {
     return this.each(function () {
       if (!$.data(this, 'plugin_' + pluginName)) {
         $.data(this, 'plugin_' + pluginName,
           new MBP( this, options ));
+      }
+      else {
+        if (options == 'options') {
+          return $.data(this, 'plugin_' + pluginName).options;
+        }
       }
     });
   }

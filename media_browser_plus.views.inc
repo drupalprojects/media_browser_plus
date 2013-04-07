@@ -68,6 +68,23 @@ function media_browser_plus_views_data_alter(&$data) {
       'click sortable' => FALSE,
     ),
   );
+
+  $data['file_managed']['media_browser_plus_views_handler_area_actions'] = array(
+    'title' => t('Actions'),
+    'group' => t('Media browser plus'),
+    'help' => t('Area with different file related actions.'),
+    'area' => array(
+      'handler' => 'media_browser_plus_views_handler_area_actions',
+    ),
+  );
+  $data['file_managed']['media_browser_plus_views_handler_area_basket'] = array(
+    'title' => t('Basket'),
+    'group' => t('Media browser plus'),
+    'help' => t('Area to collect and download files.'),
+    'area' => array(
+      'handler' => 'media_browser_plus_views_handler_area_basket',
+    ),
+  );
 }
 
 /**

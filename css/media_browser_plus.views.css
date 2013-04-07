@@ -58,3 +58,18 @@ div.view-media-browser-plus .media-list-thumbnails .form-type-checkbox {
   bottom: 0px;
   left: 0px;
 }
+
+/**
+ * Media Basket
+ */
+.mbp-file-basket-list li {
+  float: left;
+  list-style: none;
+  margin: 0 10px 10px 0;
+}
+.mbp-file-basket-list .form-type-checkbox{
+  bottom: 0px;
+  left: 0px;
+  margin: 0px;
+  padding: 0px;
+}

@@ -150,7 +150,6 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['pager']['options']['id'] = '0';
   $handler->display->display_options['style_plugin'] = 'media_browser_plus';
-  $handler->display->display_options['style_options']['show_media_basket'] = 1;
   $handler->display->display_options['row_plugin'] = 'fields';
   /* No results behavior: Global: Text area */
   $handler->display->display_options['empty']['area']['id'] = 'area';
@@ -304,6 +303,17 @@ function media_browser_plus_views_management() {
 
   /* Display: Media Browser Plus */
   $handler = $view->new_display('page', 'Media Browser Plus', 'media_browser_plus');
+  $handler->display->display_options['defaults']['footer'] = FALSE;
+  /* Footer: Media browser plus: Actions */
+  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['mbp_action_area']['actions'] = array(
+    0 => 'view',
+    1 => 'edit',
+    2 => 'delete',
+    'edit' => 'edit',
+    'delete' => 'delete',
+    'basket' => 'basket',
+  );
+  /* Footer: Media browser plus: Basket */
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Media browser plus: Preview with operations */
   $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['id'] = 'media_browser_plus_preview_vbo';
@@ -328,6 +338,13 @@ function media_browser_plus_views_management() {
       ),
     ),
     'action::views_bulk_operations_delete_item' => array(
+      'selected' => 1,
+      'postpone_processing' => 0,
+      'skip_confirmation' => 0,
+      'override_label' => 0,
+      'label' => '',
+    ),
+    'action::media_browser_plus_download_action' => array(
       'selected' => 1,
       'postpone_processing' => 0,
       'skip_confirmation' => 0,
@@ -378,6 +395,8 @@ function media_browser_plus_views_management() {
       'label' => '',
     ),
   );
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['mbp_settings']['add_link']['type'] = 'e';
+  $handler->display->display_options['fields']['media_browser_plus_preview_vbo']['mbp_settings']['add_link']['colorbox_settings'] = 'e';
   $handler->display->display_options['path'] = 'admin/content/file/mbp';
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Thumbnails Plus';

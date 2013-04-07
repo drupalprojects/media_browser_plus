@@ -24,7 +24,6 @@ class media_browser_plus_views_plugin_style_media_browser extends media_views_pl
     $options['show_folders'] = array('default' => TRUE);
     $options['files_draggable'] = array('default' => TRUE);
     $options['folders_draggable'] = array('default' => TRUE);
-    $options['show_media_basket'] = array('default' => TRUE);
 
     return $options;
   }
@@ -42,21 +41,16 @@ class media_browser_plus_views_plugin_style_media_browser extends media_views_pl
   function options_form(&$form, &$form_state) {
     // parent::options_form($form, $form_state);
 
+    $form['files_draggable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable drag and drop for files'),
+      '#default_value' => $this->options['files_draggable'],
+    );
     // @todo Add folder management and enable once it's available.
-//    $form['files_draggable'] = array(
+//    $form['folders_draggable'] = array(
 //      '#type' => 'checkbox',
-//      '#title' => t('Enable drag and drop for files'),
-//      '#default_value' => $this->options['files_draggable'],
+//      '#title' => t('Enable drag and drop for folders'),
+//      '#default_value' => $this->options['folders_draggable'],
 //    );
-    $form['folders_draggable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable drag and drop for folders'),
-      '#default_value' => $this->options['folders_draggable'],
-    );
-    $form['show_media_basket'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable media basket'),
-      '#default_value' => $this->options['items_draggable'],
-    );
   }
 }

@@ -45,6 +45,33 @@ function media_browser_plus_menu() {
     'file' => 'media_browser_plus.admin.inc',
   );
 
+  // Expose further "Mutliple" actions.
+  if (module_exists('multiform')) {
+    // Following approach comes from the media module.
+    // @todo Investigate passing file IDs in query string rather than a menu
+    // argument and then deprecate media_multi_load().
+    $items['admin/content/file/delete-multiple/%media_multi'] = array(
+      'title' => 'Delete multiple files',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('file_entity_multiple_delete_confirm', 4),
+      'access callback' => 'media_browser_plus_file_entity_access',
+      'access arguments' => array('delete', 4),
+      'file' => 'file_entity.admin.inc',
+      'file path' => drupal_get_path('module', 'file_entity'),
+    );
+  }
+  // If there's an archiver available provide the multi download.
+  if (count(archiver_get_info())) {
+    $items['admin/content/file/download-multiple/%media_multi'] = array(
+      'title' => 'Download multiple files',
+      'page callback' => 'media_browser_plus_download_multiple_files',
+      'page arguments' => array(4),
+      'access callback' => 'media_browser_plus_file_entity_access',
+      'access arguments' => array('view', 4),
+      'file' => 'file_entity.admin.inc',
+      'file path' => drupal_get_path('module', 'file_entity'),
+    );
+  }
   return $items;
 }
 
@@ -118,6 +145,7 @@ function media_browser_plus_library() {
     'dependencies' => array(
       array('system', 'ui.draggable'),
       array('system', 'ui.droppable'),
+      array('system', 'jquery.cookie'),
     ),
   );
   return $libraries;
@@ -153,56 +181,90 @@ function media_browser_plus_download_action_form($context, $form_state) {
   $vbo = _views_bulk_operations_get_field($context['view']);
   $selection = _views_bulk_operations_get_selection($vbo, $form_state);
 
-  $archiver_context = $context;
-  $archiver_context['destination'] = drupal_tempnam('temporary://', 'mbp');
-  $archiver_context['progress']['current'] = count($selection);
-  $archiver_context['progress']['total'] = 1;
-  $archiver_context['settings']['temporary'] = TRUE;
-
   $files = file_load_multiple($selection);
-  foreach ($files as $file) {
-    media_browser_plus_download_action($file, $archiver_context);
-    $archiver_context['progress']['total']++;
+  // Check permissions. If one fails - stop whole operation!
+  if (!media_browser_plus_file_entity_access('view', $files)) {
+    drupal_access_denied();
+    drupal_exit();
   }
+  media_browser_plus_download_multiple_files($selection);
 }
 
 /**
  * Callback for the action.
  */
 function media_browser_plus_download_action($file, &$context = array()) {
+  drupal_set_message('How the heck did you reach this function? Please open an issue in the issue queue, thanks! :)', 'warning');
+}
 
-  // Abuse the existing archiver action. ;)
-  // Make sure it never reaches to progress total to avoid storing a file in the
-  // database.
-  $archiver_context = $context;
-  $archiver_context['progress']['total'] = $context['progress']['total'] + 10;
-  views_bulk_operations_archive_action($file, $archiver_context);
-
-  if ($context['progress']['current'] == $context['progress']['total']) {
-    // Register cleanup function.
-    $cleanup_context = &drupal_static('media_browser_plus_download_action', $context);
-    drupal_register_shutdown_function('media_browser_plus_download_action_cleanup');
-
-    // Ensure we've the latest file information.
-    clearstatcache();
-    // Prepare headers.
-    $headers['Pragma'] = 'public';
-    $headers['Expires'] = '0';
-    $headers['Cache-Control'] = 'must-revalidate, post-check=0, pre-check=0';
-    $headers['Content-type'] = 'application/zip';
-    $headers['Content-Disposition'] = 'attachment; filename=file_download_' . time() . '.zip';
-    $headers['Content-length'] = filesize($context['destination']);
-    file_transfer($context['destination'], $headers);
+/**
+ * Download multiple files.
+ *
+ * Creates n archive for multiple files - directly sends a single file.
+ *
+ * @param array $files
+ *   A list if file id's or file objects.
+ */
+function media_browser_plus_download_multiple_files($files) {
+  $fids = array();
+  // Check if the list consists of /contains file ids.
+  foreach ($files as $key => $file) {
+    if (!is_object($file)) {
+      $fids[] = $file;
+      unset($files[$key]);
+    }
   }
+  // If file ids were found populate list of file objects.
+  if (!empty($fids)) {
+    $files = array_merge($files, file_load_multiple($fids));
+  }
+
+  if (count($files) > 1) {
+    $file_name = 'file_download_' . time() . '.zip';
+    $archive = drupal_tempnam('temporary://', 'mbp');
+    // Abuse the existing archiver action. Do like we run an action ;)
+    module_load_include('inc', 'views_bulk_operations', 'actions/archive.action');
+    $archiver_context['destination'] = $archive;
+    $archiver_context['progress']['current'] = 1;
+    $archiver_context['progress']['total'] = count($files);
+    $archiver_context['settings']['temporary'] = TRUE;
+    foreach ($files as $file) {
+      views_bulk_operations_archive_action($file, $archiver_context);
+    }
+
+    // Register cleanup function. The created archive has to be removed again.
+    $cleanup_context = &drupal_static('media_browser_plus_download_action', $archiver_context['destination']);
+    drupal_register_shutdown_function('media_browser_plus_download_action_cleanup');
+  }
+  elseif (count($files) == 1) {
+    $file = reset($files);
+    $archive = $file->uri;
+    $file_name = drupal_basename($file->uri);
+  }
+  else {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  // Ensure we've the latest file information.
+  clearstatcache();
+  // Prepare headers.
+  $headers['Pragma'] = 'public';
+  $headers['Expires'] = '0';
+  $headers['Cache-Control'] = 'must-revalidate, post-check=0, pre-check=0';
+  $headers['Content-type'] = 'application/zip';
+  $headers['Content-Disposition'] = 'attachment; filename=' . $file_name;
+  $headers['Content-length'] = filesize($archive);
+  file_transfer($archive, $headers);
 }
 
 /**
  * Delete temporary download archive.
  */
 function media_browser_plus_download_action_cleanup() {
-  $cleanup_context = &drupal_static('media_browser_plus_download_action', array());
-  if (isset($cleanup_context['destination'])) {
-    drupal_unlink($cleanup_context['destination']);
+  $file = &drupal_static('media_browser_plus_download_action', array());
+  if (!empty($file)) {
+    drupal_unlink($file);
   }
 }
 
@@ -236,6 +298,26 @@ function media_browser_plus_move_file_callback($file, $folder) {
  */
 function media_browser_plus_access($op) {
   return (user_access('administer files') || user_access($op));
+}
+
+/**
+ * Wrapper around file_entity_access() to deal with multiple files.
+ */
+function media_browser_plus_file_entity_access($op, $files = NULL, $account = NULL) {
+  // If there's files parameter, ensure it is an array to handle.
+  if (!is_array($files) && !empty($files)) {
+    $files = array($files);
+  }
+  if (!empty($files)) {
+    foreach ($files as $file) {
+      // Even if one is not accessible return FALSE.
+      if (!file_entity_access($op, $file, $account)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+  return file_entity_access($op, $files, $account);
 }
 
 /**
