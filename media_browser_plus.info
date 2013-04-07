@@ -1,9 +1,9 @@
 name = Media Browser Plus for Media 2.x
-description = Provides better UX for the media browser
+description = Provides enhanced UX and addtional features for Media.
 package = "Media"
 core = 7.x
 
-dependencies[] = file_entity
+dependencies[] = media
 dependencies[] = taxonomy
 dependencies[] = views_tree
 dependencies[] = views_bulk_operations

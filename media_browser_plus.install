@@ -15,6 +15,9 @@ function media_browser_plus_install() {
   if (drupal_installation_attempted() && !variable_get('simpletest_parent_profile', FALSE)) {
     _media_browser_plus_ensure_field_tags();
   }
+
+  // This should be load after views is ready.
+  db_query("UPDATE {system} SET weight = 11 WHERE name = 'media_browser_plus'");
 }
 
 /**
@@ -155,26 +158,22 @@ function _media_browser_plus_ensure_instance($instance) {
  */
 function media_browser_plus_enable() {
   // Save default settings.
-  variable_set('media_media_per_page', 30);
-  variable_set('media_grid_window_height', 400);
-  variable_set('media_page_items_per_page', 10);
   variable_set('media_browser_plus_thumbnails_as_default_browser', TRUE);
+  variable_set('filesystem_folders', TRUE);
 
   // Create the media folder.
   media_browser_plus_get_media_root_folder(TRUE);
   $dir = variable_get('file_default_scheme', 'public') . '://' . variable_get('media_root_folder') . '/';
-  file_prepare_directory($dir, FILE_CREATE_DIRECTORY);
+  file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 }
 
 /**
  * Implements hook_uninstall().
  */
 function media_browser_plus_uninstall() {
-  variable_del('media_media_per_page');
-  variable_del('media_grid_window_height');
-  variable_del('media_page_items_per_page');
   variable_del('media_root_folder');
   variable_del('media_browser_plus_thumbnails_as_default_browser');
+  variable_del('filesystem_folders');
 }
 
 /**
@@ -183,4 +182,17 @@ function media_browser_plus_uninstall() {
 function media_browser_plus_update_7001() {
   _media_browser_plus_ensure_field_folder();
   _media_browser_plus_ensure_field_tags();
+}
+
+/**
+ * Update from 2.x to 3.x branch.
+ */
+function media_browser_plus_update_7002() {
+  // Set weight.
+  db_query("UPDATE {system} SET weight = 11 WHERE name = 'media_browser_plus'");
+
+  // Remove legacy variables.
+  variable_del('media_media_per_page');
+  variable_del('media_grid_window_height');
+  variable_del('media_page_items_per_page');
 }

@@ -408,7 +408,7 @@ class MediaBrowserPlusTest extends DrupalWebTestCase {
     // Create mbp independent folders and files.
     $scheme = variable_get('file_default_scheme', 'public') . '://';
     $independent_folder = drupal_realpath($scheme) . '/non_mbp';
-    file_prepare_directory($independent_folder, FILE_CREATE_DIRECTORY);
+    file_prepare_directory($independent_folder, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
     $independent_files = array(
       $independent_folder . '/non_mpp.txt',
       drupal_realpath($scheme) . '/non_mpp.txt',

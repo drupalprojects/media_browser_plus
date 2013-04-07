@@ -1,12 +1,8 @@
 <?php
 /**
  * @file
- * Adds fields to the media browser forms for better UX
+ * Media Browser Plus - enhanced file management functions.
  */
-
-define('MEDIA_ENTITY_ACCESS_IGNORE', 10);
-define('MEDIA_ENTITY_ACCESS_DENY', 20);
-define('MEDIA_ENTITY_ACCESS_ALLOW', 30);
 
 /**
  * Implements hook_views_api().
@@ -19,8 +15,10 @@ function media_browser_plus_views_api() {
 
 /**
  * Implements hook_menu().
+ * @see hook_menu()
  */
 function media_browser_plus_menu() {
+  $path = drupal_get_path('module', 'media_browser_plus');
   $items['admin/content/file/thumbnailsJSON'] = array(
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_thumbnailsJSON',
@@ -43,9 +41,27 @@ function media_browser_plus_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_media_settings'),
     'access arguments' => array('administer files'),
+    'file path' => $path . '/includes',
+    'file' => 'media_browser_plus.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function media_browser_plus_menu_alter(&$items) {
+  // If enabled replace the default file browser by mbp.
+  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE)) {
+    $items['admin/content/file/list'] = $items['admin/content/file'];
+
+    $file_title = $items['admin/content/file']['title'];
+    $items['admin/content/file'] = $items['admin/content/file/mbp'];
+    $items['admin/content/file']['title'] = $file_title;
+    $items['admin/content/file/mbp']['type'] = MENU_DEFAULT_LOCAL_TASK;
+    $items['admin/content/file/mbp']['weight'] = -1;
+  }
 }
 
 /**
@@ -64,6 +80,14 @@ function media_browser_plus_menu_local_tasks_alter(&$data, $router_item, $root_p
       );
     }
     $item = menu_get_item('admin/content/file/import');
+    if (!empty($item['access'])) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+        '#weight' => $item['weight'],
+      );
+    }
+    $item = menu_get_item('admin/structure/taxonomy/media_folders');
     if (!empty($item['access'])) {
       $data['actions']['output'][] = array(
         '#theme' => 'menu_local_action',
@@ -202,81 +226,6 @@ function media_browser_plus_move_file_callback($file, $folder) {
 }
 
 /**
- * Checks if the user has the permission to download a file.
- *
- * @todo: this function may be obsolete in 2.x
- *
- * @param $field
- * @param string $entity_type
- *   The entity type.
- * @param string $entity
- *   Then entity.
- */
-function media_browser_plus_file_download_access($field, $entity_type, $entity) {
-  // Only check against media entities.
-  if ($entity_type == 'file') {
-    // Check for media admin AND return true if found.
-    return file_acces('view', $entity);
-    // return media_browser_plus_media_access($entity);
-  }
-}
-
-/**
- * Checks access to a given media entity.
- *
- * @todo: this function may be obsolete in 2.x
- *
- * @param object $media_entity
- */
-function media_browser_plus_media_access($media_entity) {
-  if (media_browser_plus_access('administer files')) {
-    return TRUE;
-  }
-  // Start with ACCESS_ALLOW - by default media items are fully accessible.
-  $access = MEDIA_ENTITY_ACCESS_ALLOW;
-  // Collect all modules implementing hook_media_entity_access.
-  foreach (module_implements('media_entity_access') as $module) {
-    // And invoke the hook.
-    $return = module_invoke($module, 'media_entity_access', $media_entity);
-    // If no ALLOW or DENY was returned we assume IGNORE and check the next.
-    if ($return != MEDIA_ENTITY_ACCESS_ALLOW && $return != MEDIA_ENTITY_ACCESS_DENY) {
-      continue;
-    }
-    // If we have a DENY we can return a complete false here.
-    if ($return === MEDIA_ENTITY_ACCESS_DENY) {
-      return FALSE;
-    }
-    // Otherwise it is an ALLOW and we save it.
-    $access = MEDIA_ENTITY_ACCESS_ALLOW;
-  }
-  // Check if we had one allow.
-  return ($access === MEDIA_ENTITY_ACCESS_ALLOW);
-}
-
-/**
- * Revokes the general 'view media' == 'download media' access rule.
- * @todo: this function may be obsolete in 2.x
- */
-function media_browser_plus_file_download_access_alter(&$grants, $field, $entity_type, $entity = NULL) {
-  if ($entity_type == 'file') {
-    unset($grants['file']);
-  }
-}
-
-/**
- * Implements hook_media_operations().
- */
-function media_browser_plus_media_operations() {
-  return array(
-    'edit_multiple' => array(
-      'label' => t('Edit'),
-      'callback' => NULL,
-      'redirect' => 'admin/content/file/edit_multiple/%fids',
-    ),
-  );
-}
-
-/**
  * Manages access for media browser plus actions.
  *
  * @param string $op
@@ -290,380 +239,11 @@ function media_browser_plus_access($op) {
 }
 
 /**
- * Checks for unsorted (i.e. media not in folders) media.
- */
-function _media_browser_plus_has_unsorted_media() {
-
-  // EFQ doesn't work because the field table is used as base table and an inner
-  // join is used?!
-  // $query = new EntityFieldQuery('file');
-  // $result = $query
-  //   ->entityCondition('entity_type', 'file')
-  //   ->propertyCondition('status', 1)
-  //   ->fieldCondition('field_folder', 'tid', '', 'IS NULL')
-  //   ->range(0, 1)
-  //   ->execute();
-  //
-  // In favor of not unnecessarily loading file entities we use a raw query.
-  // *eeeewwh*!
-  $query = db_select('file_managed')
-    ->fields('file_managed', array('fid'))
-    ->condition('uri', db_like('temporary://') . '%', 'NOT LIKE')
-    ->isNull('entity_id')
-    ->range(0, 1);
-  $query->leftJoin('field_data_field_folder', 'folder', "entity_type = 'file' AND entity_id = file_managed.fid");
-  $result = $query->execute()->fetchCol();
-
-  return !empty($result);
-}
-
-/**
- * Loads media entities and allows filtering, sorting and paging.
- *
- * @param array $variables
- *   Holds an array with the following optional parameters
- * $ids
- *   one dimensional array of entity_ids
- * $conditions
- *   multidemsional array build like this:
- *   array(
- *     array('entity' => array('comlumn', 'value', 'condition')),
- *     array('property' => array('comlumn', 'value', 'condition')),
- *     array('field' => array('field_name', 'comlumn', 'value', 'condition')),
- *   )
- * $order
- *   multidemsional array build like this:
- *   array(array('entity' => array('comlumn', 'direction')),
- *         array('property' => array('comlumn', 'direction')),
- *         array('field' => array('comlumn', 'direction')))
- * $header
- *   table header used for sorting
- * $per_page
- *   items per page
- */
-function media_browser_plus_load_multiple($variables) {
-  // Set up default parameter.
-  $params = array(
-    'ids' => array(),
-    'conditions' => array(),
-    'order' => array(),
-    'header' => array(),
-    'page' => -1,
-    'per_page' => variable_get('media_media_per_page', 30),
-    'paging' => TRUE,
-    'ids_only' => FALSE,
-    'count_only' => FALSE,
-    'apply_filter' => TRUE,
-  );
-  // Override defaults.
-  // @todo Is this loop really necessary. Something like
-  // $params = $variables + $params; should work too, right?
-  foreach ($variables as $key => $value) {
-    if (isset($params[$key])) {
-      $params[$key] = &$variables[$key];
-    }
-  }
-  if ($params['apply_filter'] && isset($_SESSION['media-filter'])) {
-    if (strlen($_SESSION['media-filter']['filename'])) {
-      $params['conditions'][] = array(
-        'property' => array(
-          'filename',
-          '%' . $_SESSION['media-filter']['filename'] . '%',
-          'LIKE',
-        ),
-      );
-    }
-    if (count($_SESSION['media-filter']['type'])) {
-      $params['conditions'][] = array(
-        'property' => array(
-          'type',
-          explode(',', $_SESSION['media-filter']['type']),
-          'IN',
-        ),
-      );
-    }
-    if (count($_SESSION['media-filter']['field_folder'])) {
-      $params['conditions'][] = array(
-        'field' => array(
-          'field_folder',
-          'tid',
-          $_SESSION['media-filter']['field_folder'],
-          'IN',
-        ),
-      );
-    }
-    if (count($_SESSION['media-filter']['field_tags'])) {
-      foreach ($_SESSION['media-filter']['field_tags'] as $tag_id) {
-        $params['conditions'][] = array(
-          'field' => array('field_tags', 'tid', $tag_id, '='),
-        );
-      }
-    }
-  }
-  // Do not list temporary files.
-  foreach (array_keys(media_get_hidden_stream_wrappers()) as $name) {
-    $params['conditions'][] = array(
-      'property' => array('uri', $name . '%', 'NOT LIKE'),
-    );
-  }
-  // Allow other modules to add/alter conditions.
-  foreach (module_implements('media_access_conditions') as $module) {
-    $params['conditions'] = array_merge(module_invoke($module, 'media_access_conditions'), $params['conditions']);
-  }
-  $query = new EntityFieldQuery();
-  // Set entity type to media.
-  $query->entityCondition('entity_type', 'file');
-  // EntityFieldQuery shouldn't check access against node_access.
-  $query->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
-  // Parse ids if any have been passed.
-  if (count($params['ids'])) {
-    $query->entityCondition('entity_id', $params['ids'], 'IN');
-  }
-  // Check for table header.
-  if (count($params['header'])) {
-    $query->tableSort($params['header']);
-  }
-  // Parse conditions.
-  foreach ($params['conditions'] as $condition) {
-    // Look what type we have.
-    $condition_keys = array_keys($condition);
-    switch (array_pop($condition_keys)) {
-      case 'entity':
-        $query->entityCondition(
-          $condition['entity'][0],
-          $condition['entity'][1],
-          $condition['entity'][2]
-        );
-        break;
-
-      case 'property':
-        $query->propertyCondition(
-          $condition['property'][0],
-          $condition['property'][1],
-          $condition['property'][2]
-        );
-        break;
-
-      case 'field':
-        $query->fieldCondition(
-          $condition['field'][0],
-          $condition['field'][1],
-          $condition['field'][2],
-          $condition['field'][3]
-        );
-        break;
-
-    }
-  }
-  // Parse order array.
-  foreach ($params['order'] as $condition) {
-    // Look what type we have.
-    $condition_keys = array_keys($condition);
-    switch (array_pop($condition_keys)) {
-      case 'entity':
-        $query->entityOrderBy(
-          $condition['entity'][0],
-          $condition['entity'][1]
-        );
-        break;
-
-      case 'property':
-        $query->propertyOrderBy(
-          $condition['property'][0],
-          $condition['property'][1]
-        );
-        break;
-
-      case 'field':
-        $query->fieldOrderBy(
-          $condition['field'][0],
-          $condition['field'][1],
-          $condition['field'][2]
-        );
-        break;
-
-    }
-  }
-  // Prepare result object.
-  $res_object = new stdClass();
-  if ($params['paging'] && !$params['count_only']) {
-    // Doing a separate count query here, because including the internal pager
-    // doesn't work but seems the only way to get a total result count.
-    $count = clone $query;
-    $count->pager();
-    $count->execute();
-    $res_object->overall_count = $count->pager['total'];
-    // Using range here, because as said above the internal pager seems to be
-    // bugged.
-    $page = $params['page'];
-    if ($page == -1) {
-      $page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 0;
-    }
-    $query->range($page * $params['per_page'], $params['per_page']);
-    // Adding the addition result fields.
-    $res_object->page = $page;
-    $res_object->pages = ceil($res_object->overall_count / variable_get('media_media_per_page', 30));
-    $res_object->per_page = $params['per_page'];
-  }
-  // Count only query.
-  if ($params['count_only']) {
-    $query->pager();
-    $query->execute();
-    return $query->pager['total'];
-  }
-  $res_object->results = array();
-  // Execute query and load results.
-  $result = $query->execute();
-  if (!empty($result['file'])) {
-    $res_object->results = $params['ids_only'] ? array_keys($result['file']) :
-      entity_load('file', array_keys($result['file']));
-  }
-  return $res_object;
-}
-
-/**
- * Creates the media browser plus settings form.
- */
-function media_browser_plus_media_settings($form, &$form_state = array()) {
-  $form = array(
-    'media_per_page' => array(
-      '#type' => 'textfield',
-      '#title' => t('Media Items per page'),
-      '#description' => t('Insert a number higher than one for the amount of media items displayed per page.'),
-      '#default_value' => variable_get('media_media_per_page', 30),
-      '#maxlength' => 4,
-      '#required' => TRUE,
-    ),
-    'grid_window_height' => array(
-      '#type' => 'textfield',
-      '#title' => t('Grind Window Height'),
-      '#default_value' => variable_get('media_grid_window_height', 400),
-      '#description' => t('Set a maximum height of pixels for the media grid view.'),
-      '#maxlength' => 4,
-      '#required' => TRUE,
-    ),
-    'page_items_per_page' => array(
-      '#type' => 'textfield',
-      '#title' => t('Page Items per page'),
-      '#default_value' => variable_get('media_page_items_per_page'),
-      '#description' => t('Set how many page items you want in the paging navigation of each page.'),
-      '#maxlength' => 4,
-      '#required' => TRUE,
-    ),
-    'max_filesize' => array(
-      '#type' => 'textfield',
-      '#title' => t('Upload Maximum Filesize'),
-      '#default_value' => media_variable_get('max_filesize'),
-      '#description' => t('Standard unit is bytes and therefore can be left out. Otherwise use "NUMBER UNIT"'),
-      '#maxlength' => 20,
-      '#required' => TRUE,
-    ),
-    'root_folder' => array(
-      '#type' => 'textfield',
-      '#title' => t('Media Root folder'),
-      '#default_value' => variable_get('media_root_folder'),
-      '#description' => t("The root folder for files handled by the media module. <strong>Attention: Changing this will move all existing files in the file system too!</strong>"),
-    ),
-    'media_browser_plus_thumbnails_as_default_browser' => array(
-      '#type' => 'checkbox',
-      '#title' => t('Use thumbnails view as default.'),
-      '#description' => t('If enabled the thumbnails view will displayed when accessing "admin/content/file".'),
-      '#default_value' => variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE),
-    ),
-  );
-
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
-  return $form;
-
-}
-
-/**
- * Saves the entered settings.
- */
-function media_browser_plus_media_settings_submit($form, &$form_state) {
-  // Change settings.
-  variable_set('media_media_per_page', (int) $form_state['values']['media_per_page']);
-  variable_set('media_grid_window_height', (int) $form_state['values']['grid_window_height']);
-  variable_set('media_page_items_per_page', (int) $form_state['values']['page_items_per_page']);
-  media_variable_set('max_filesize', trim($form_state['values']['max_filesize']));
-
-  // Check if the root folder was changed.
-  $old_root = variable_get('media_root_folder');
-  $new_root = trim($form_state['values']['root_folder'], '/');
-  // Move the files to the new root folder if necessary.
-  if ($old_root != $new_root) {
-    // Load folder handling functions.
-    module_load_include('inc', 'media_browser_plus', 'includes/media_browser_plus.folders');
-    media_browser_plus_move_root_folder($old_root, $new_root);
-  }
-
-  // Notify user.
-  drupal_set_message(t('Media Browser Plus Settings changed successfully'));
-}
-
-/**
- * Validates the settings.
- */
-function media_browser_plus_media_settings_validate($form, &$form_state) {
-  // Validate settings.
-  $value = (int) $form_state['values']['media_per_page'];
-  if ($value <= 0) {
-    form_set_error('Media Settings', t('Illegal value for "Media Items per page"'));
-  }
-  $value = (int) $form_state['values']['grid_window_height'];
-  if ($value <= 100) {
-    form_set_error('Media Settings', t('Illegal value for "Grind Window Height"'));
-  }
-  $value = (int) $form_state['values']['page_items_per_page'];
-  if ($value <= 2) {
-    form_set_error('Media Settings', t('Illegal value for "Page Items per page"'));
-  }
-  $value = parse_size(trim($form_state['values']['max_filesize']));
-  if ($value === 0) {
-    form_set_error('Media Settings', t('Illegal value for "Upload Maximum Filesize"'));
-  }
-}
-
-/**
- * Check if a given folder has media in it (does include current filter).
- *
- * @param int $folder_id
- *   Id of the folder to check.
- *
- * @return bool
- *  TRUE if the folder is empty.
- */
-function _media_browser_plus_folder_is_empty($folder_id) {
-  // Save paging values.
-  $gp = isset($_GET['page']) ? $_GET['page'] : NULL;
-  $pp = isset($_POST['page']) ? $_POST['page'] : NULL;
-  // Set media condition.
-  $condition = array(
-    array('field' => array('field_folder', 'tid', array($folder_id), 'IN')),
-  );
-  $variables = array(
-    'conditions' => $condition,
-    'per_page' => 1,
-    'ids_only' => TRUE,
-  );
-  $media = media_browser_plus_load_multiple($variables);
-  // Restore paging values if necessary.
-  if ($gp) {
-    $_GET['page'] = $gp;
-  }
-  if ($pp) {
-    $_POST['page'] = $pp;
-  }
-  // Check if media has been found in the folder.
-  return empty($media->overall_count);
-}
-
-/**
  * Loads and (if $autocreate is set) creates the default media folder object.
  *
- * @param boolean $autocreate
+ * @param bool $autocreate
  *   Creates the folder if necessary.
+ *
  * @return object|FALSE
  *   The folder term or FALSE if not found.
  */
@@ -692,91 +272,76 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
 /**
  * Construct the path of a media_folder term.
  *
+ * Always returns the same path if the filesystem handling is disabled.
+ *
  * @param object|NULL $term
  *   Containing term id and term name. If left empty the root folder will be
  *   returned.
  *
  * @return string
- *   The path to the requested folder. Doesn't have a trailing slash.
+ *   The path to the requested folder. Without a trailing slash.
  */
 function media_browser_plus_construct_dir_path($term = NULL) {
   $path = '';
   if ($root_folder = variable_get('media_root_folder')) {
-    $path .= $root_folder . '/';
+    $path = $root_folder;
+  }
+  if (!variable_get('filesystem_folders', TRUE)) {
+    return variable_get('file_default_scheme', 'public') . '://' . trim($path, '/');
   }
   $root_folder_term = media_browser_plus_get_media_root_folder();
-  if ($term) {
+  if ($term && $term->tid != $root_folder_term->tid) {
     $parents = array_reverse(taxonomy_get_parents_all($term->tid));
+    array_pop($parents);
     if (is_array($parents) && !empty($parents)) {
       foreach ($parents as $parent) {
-        // @TODO Shouldn't we sanitize this?!? There can be special chars!
-        $folder_name = $parent->name;
         if ($parent->tid != $root_folder_term->tid) {
-          $path .= $folder_name . '/';
+          $path = file_create_filename($parent->name, $path);
         }
       }
     }
+    $path = file_create_filename($term->name, $path);
   }
-  return variable_get('file_default_scheme', 'public') . '://' . rtrim($path, '/');
+  $path = variable_get('file_default_scheme', 'public') . '://' . trim($path, '/');
+  return $path;
 }
 
 /**
- * Cut-paste a directory with its children into a new filesystem location.
+ * Moves and saves a file.
  *
- * @param string $source
- *   The current folder path.
- * @param string $destination
- *   The path we want the folder moved to.
- */
-function media_browser_plus_move_physical_folder($source, $destination) {
-  $destination = drupal_realpath($destination);
-  $source = drupal_realpath($source);
-  $jail = drupal_realpath(variable_get('file_default_scheme', 'public') . '://');
-  // @todo Please avoid an error by checking the preconditions instead.
-  $files = @scandir($source);
-  if ($files && count($files) > 2) {
-    $transfer = new FileTransferLocal($jail);
-    $transfer->copyDirectory($source, $destination);
-    $transfer->removeDirectory($source);
-  }
-  else {
-    // The folder is empty so just delete and create the new one.
-    drupal_rmdir($source);
-    file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
-  }
-  return TRUE;
-}
-
-/**
- * Moves and saves permanently a media file.
- *
- * Every media file that is saved or updated,should pass through this to make
- * sure the filesystem location is the same with the folder term.
+ * Every managed file that is saved or updated,should pass through this to
+ * ensure the filesystem location matches the folder term.
  *
  * @param int $tid
  *   The folder's term id.
- * @param stdClass $media
- *   The media object.
+ * @param stdClass $file
+ *   The file object.
  * @param int $replace
  *   Replace behavior when the destination file already exists.
+ *
+ * @return bool
+ *   TRUE on success.
  */
-function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
-  // Don't change the uri for media files with external source.
-  if (strpos($media->uri, 'public') === FALSE && strpos($media->uri, 'private') === FALSE) {
-    file_save($media);
+function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME) {
+  $local_stream_wrappers = media_get_local_stream_wrappers();
+  $scheme = file_uri_scheme($file->uri);
+
+  // Don't change the uri for non-local files.
+  if (!isset($local_stream_wrappers[$scheme])) {
+    file_save($file);
   }
   else {
     // Media translation module does need this since it allows the creation of
     // file references which shouldn't move the referenced file itself when
     // moved. See http://drupal.org/node/1331818 for details.
-    if (module_exists('media_translation') && media_translation_is_virtual_file($media->fid)) {
-      file_save($media);
-      return;
+    if (module_exists('media_translation') && media_translation_is_virtual_file($file->fid)) {
+      file_save($file);
+      return TRUE;
     }
     $folder = taxonomy_term_load($tid);
     $path = media_browser_plus_construct_dir_path($folder);
-    file_prepare_directory($path, FILE_CREATE_DIRECTORY);
-    return file_move($media, $path, $replace);
+    file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+    return file_move($file, $path, $replace);
   }
   return TRUE;
 }
@@ -784,14 +349,27 @@ function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAM
 /**
  * Implements hook_taxonomy_term_presave().
  *
- * @see media_browser_plus_taxonomy_term_update().
+ * @see media_browser_plus_taxonomy_term_update()
  */
 function media_browser_plus_taxonomy_term_presave($term) {
   // Figure out if this is a folder term and if so store the current file path
   // for further processing in media_browser_plus_taxonomy_term_update().
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
-  if (!empty($term->tid) && !empty($vocabulary) && $term->vid == $vocabulary->vid) {
-    $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term);
+  if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
+    // A subfolder term is always child of the root folder.
+    if (empty($term->parent[0])) {
+      $root_folder = media_browser_plus_get_media_root_folder();
+      $term->parent = array($root_folder->tid);
+    }
+    // A folder term can just have one parent.
+    if (count($term->parent) > 1) {
+      $term->parent = array(reset($term->parent));
+    }
+    // Actions if this is an existing term.
+    if (!empty($term->tid)) {
+      // Store current path the check later if the folder was moved.
+      $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term);
+    }
   }
 }
 
@@ -800,8 +378,9 @@ function media_browser_plus_taxonomy_term_presave($term) {
  */
 function media_browser_plus_taxonomy_term_insert($term) {
   if ($term->vocabulary_machine_name == 'media_folders') {
+    // Prepare path for new folder terms.
     $dir = media_browser_plus_construct_dir_path($term);
-    if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
+    if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
     }
     else {
@@ -816,12 +395,22 @@ function media_browser_plus_taxonomy_term_insert($term) {
  * @see media_browser_plus_taxonomy_term_presave()
  */
 function media_browser_plus_taxonomy_term_update($term) {
-  // Check if this is a folder term and the source path is set.
+  // Check if the folder term was moved. Only folder terms have this property.
   if (!empty($term->media_browser_plus_original_path)) {
-    module_load_include('inc', 'media_browser_plus', '/includes/media_browser_plus.folders');
-    // Update physical folder.
     $destination = media_browser_plus_construct_dir_path($term);
-    media_browser_plus_move_subfolder($term, $term->media_browser_plus_original_path, $destination);
+    if ($term->media_browser_plus_original_path != $destination) {
+      module_load_include('inc', 'media_browser_plus', '/includes/media_browser_plus.folders');
+      // Prepare batch to move folder and files.
+      $batch = array(
+        'title' => t('Updating file locations'),
+        'operations' => media_browser_plus_move_subfolder($term, $term->media_browser_plus_original_path, $destination),
+        'file' => drupal_get_path('module', 'media_browser_plus') . '/includes/media_browser_plus.folders.inc',
+      );
+      // If necessary start the batch to update the folder structure.
+      if (!empty($batch['operations'])) {
+        batch_set($batch);
+      }
+    }
   }
 }
 
@@ -846,31 +435,107 @@ function media_browser_plus_taxonomy_term_delete($term) {
 
     foreach ($folders as $folder) {
       // Fetch all files from the folder.
-      $conditions = array();
-      $conditions[] = array('field' => array('field_folder', 'tid', $folder->tid, '='));
-      $options = array(
-        'apply_filter' => FALSE,
-        'count_only' => FALSE,
-        'paging' => FALSE,
-        'conditions' => $conditions,
-      );
-      $folder_path = media_browser_plus_construct_dir_path($folder);
-      if ($files = media_browser_plus_load_multiple($options)) {
-        $all_files_deleted = TRUE;
-        if (!empty($files->results)) {
-          foreach ($files->results as $file) {
-            if (!file_delete($file)) {
-              $all_files_deleted = FALSE;
-            }
-          }
-        }
-        // Also delete the folder when it's empty.
-        if ($all_files_deleted) {
-          if (!@drupal_rmdir($folder_path)) {
-            drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+      $file_query = new EntityFieldQuery();
+      $files = $file_query
+        ->entityCondition('entity_type', 'file')
+        ->fieldCondition('field_folder', 'tid', $folder->tid)
+        ->execute();
+      $all_files_deleted = TRUE;
+      // If there are files, delete them.
+      if (!empty($files['file'])) {
+        $files = file_load_multiple(array_keys($files['file']));
+        foreach ($files as $file) {
+          if (!file_delete($file)) {
+            $all_files_deleted = FALSE;
           }
         }
       }
+      // Also delete the folder when it's empty.
+      if ($all_files_deleted) {
+        $folder_path = media_browser_plus_construct_dir_path($folder);
+        if (!@drupal_rmdir($folder_path)) {
+          drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+        }
+      }
     }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This is necessary since altering the hierarchy or weight of terms in the
+ * overview won't trigger any term hooks *blargh* :|
+ */
+function media_browser_plus_form_taxonomy_overview_terms_alter(&$form, &$form_state, $vocabulary) {
+  if (variable_get('filesystem_folders', TRUE) && $form['#vocabulary']->machine_name == 'media_folders') {
+    $form['#validate'][] = 'media_browser_plus_form_taxonomy_overview_terms_validate';
+    $form['#submit'][] = 'media_browser_plus_form_taxonomy_overview_terms_submit';
+  }
+}
+
+/**
+ * Validation handler for the taxonomy term overview list.
+ *
+ * This is necessary since altering the hierarchy or weight of terms in the
+ * overview won't trigger any term hooks *blargh* :|
+ */
+function media_browser_plus_form_taxonomy_overview_terms_validate(&$form, &$form_state) {
+  $vocabulary = $form['#vocabulary'];
+  $tree = taxonomy_get_tree($vocabulary->vid);
+  foreach ($tree as $term) {
+    $form_state['#mbp_original_paths'][$term->tid] = media_browser_plus_construct_dir_path($term);
+  }
+}
+
+/**
+ * Submit handler for the taxonomy term overview list.
+ *
+ * This is necessary since altering the hierarchy or weight of terms in the
+ * overview won't trigger any term hooks *blargh* :|
+ */
+function media_browser_plus_form_taxonomy_overview_terms_submit(&$form, &$form_state) {
+  module_load_include('inc', 'media_browser_plus', 'includes/media_browser_plus.folders');
+  $vocabulary = $form['#vocabulary'];
+  taxonomy_terms_static_reset();
+  $root_folder = media_browser_plus_get_media_root_folder();
+  $tree = taxonomy_get_tree($vocabulary->vid);
+
+  // Prepare batch.
+  $batch = array(
+    'title' => t('Updating Media'),
+    'operations' => array(),
+    'finished' => 'media_browser_plus_update_folder_hierarchy_batch_complete',
+    'file' => drupal_get_path('module', 'media_browser_plus') . '/includes/media_browser_plus.folders.inc',
+  );
+  foreach ($tree as $term) {
+    // Deal only with subfolders.
+    if ($term->tid != $root_folder->tid) {
+      // A subfolder term is always child of the root folder.
+      if (empty($term->parents[0])) {
+        // The presave hook will take care of fixing this.
+        taxonomy_term_save($term);
+      }
+      $path = media_browser_plus_construct_dir_path($term);
+      if ($form_state['#mbp_original_paths'][$term->tid] != $path) {
+        $batch['operations'] = array_merge($batch['operations'], media_browser_plus_move_subfolder($term, $form_state['#mbp_original_paths'][$term->tid], $path));
+      }
+    }
+  }
+  // If necessary start the batch to update the structure.
+  if (!empty($batch['operations'])) {
+    batch_set($batch);
+  }
+}
+
+/**
+ * Batch process finish callback for updating the folder hierarchy.
+ */
+function media_browser_plus_update_folder_hierarchy_batch_complete($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('Successfully updated all folders'));
+  }
+  else {
+    drupal_set_message(t('Error while updating folder structure'), 'error');
   }
 }
