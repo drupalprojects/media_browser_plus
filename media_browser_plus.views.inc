@@ -85,6 +85,14 @@ function media_browser_plus_views_data_alter(&$data) {
       'handler' => 'media_browser_plus_views_handler_area_basket',
     ),
   );
+  $data['file_managed']['media_browser_plus_views_handler_area_navigation'] = array(
+    'title' => t('Navigation'),
+    'group' => t('Media browser plus'),
+    'help' => t('Area to navigate using the folder structure.'),
+    'area' => array(
+      'handler' => 'media_browser_plus_views_handler_area_navigation',
+    ),
+  );
 }
 
 /**
@@ -156,15 +164,6 @@ function template_preprocess_media_browser_plus_views_view_media_browser(&$vars)
   $vars['options']['view_id'] = $view->name;
   $vars['options']['view_display_id'] = $view->current_display;
 
-  // Fetch folder filter.
-  if ($view->filter) {
-    foreach ($view->filter as $filter) {
-      if ($filter->is_exposed() && $filter->real_field == 'field_folder_tid') {
-        $vars['options']['folder_filter_id'] = $filter->options['expose']['identifier'];
-      }
-    }
-  }
-
   // Add settings for the js library.
   drupal_add_js(array(
     'mbp' => array(
@@ -175,11 +174,17 @@ function template_preprocess_media_browser_plus_views_view_media_browser(&$vars)
     'setting'
   );
 
-  // Add folders view.
-  // @todo should this be configurable?
+  // Special handling of the navigation. We abuse a area handler to add and
+  // configure the navigation - that way it's very flexible.
+  // Check if a navigation handler is configured.
   $vars['folders'] = NULL;
-  if (!empty($vars['options']['show_folders'])) {
-    $vars['folders'] = views_embed_view('media_browser_plus_folders');
+  foreach (array('header', 'footer') as $area) {
+    foreach ($display_handler->handlers[$area] as $handler) {
+      if ($handler instanceof media_browser_plus_views_handler_area_navigation) {
+        $vars['folders'] = $handler->render_custom();
+        break(2);
+      }
+    }
   }
 }
 

@@ -12,7 +12,10 @@
  */
 class media_browser_plus_views_handler_field_preview_vbo extends views_bulk_operations_handler_field_operations {
 
-  function option_definition() {
+  /**
+   * Define the handler options.
+   */
+  public function option_definition() {
     $options = parent::option_definition();
 
     $options['mbp_settings'] = array(
@@ -28,7 +31,10 @@ class media_browser_plus_views_handler_field_preview_vbo extends views_bulk_oper
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * Options form.
+   */
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form['mbp_settings'] = array(
@@ -56,6 +62,11 @@ class media_browser_plus_views_handler_field_preview_vbo extends views_bulk_oper
     );
   }
 
+  /**
+   * Returns the media browser preview item and the VBO tokens.
+   *
+   * @see media_get_thumbnail_preview()
+   */
   public function render($values) {
     $output = parent::render($values);
     $file = file_load($values->fid);

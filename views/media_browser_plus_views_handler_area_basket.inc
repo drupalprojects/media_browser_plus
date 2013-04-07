@@ -6,21 +6,22 @@
  */
 
 /**
- * MBP area with file basket
+ * MBP area with file basket.
  *
  * @ingroup views_area_handlers
  */
 class media_browser_plus_views_handler_area_basket extends views_handler_area {
 
-  function option_definition() {
-    $options= array();
-    return $options;
+  /**
+   * Has no options, so don't return a form.
+   */
+  public function options_form(&$form, &$form_state) {
   }
 
-  function options_form(&$form, &$form_state) {
-  }
-
-  function render($empty = FALSE) {
+  /**
+   * Returns the markup for the basket area.
+   */
+  public function render($empty = FALSE) {
     $output['mbp_basket'] = array(
       '#type' => 'fieldset',
       '#title' => t('Media Basket'),
@@ -84,18 +85,24 @@ class media_browser_plus_views_handler_area_basket extends views_handler_area {
     return $output;
   }
 
-  function can_expose() {
+  /**
+   * Always exposed.
+   */
+  public function can_expose() {
     return TRUE;
   }
 
-  function is_exposed() {
+  /**
+   * Always exposed.
+   */
+  public function is_exposed() {
     return TRUE;
   }
 
   /**
    * Form element to track the media basket.
    */
-  function exposed_form(&$form, &$form_state) {
+  public function exposed_form(&$form, &$form_state) {
     $default_value = NULL;
     if (isset($_COOKIE['Drupal_visitor_mbp_basket'])) {
       $fids = explode(' ', $_COOKIE['Drupal_visitor_mbp_basket']);

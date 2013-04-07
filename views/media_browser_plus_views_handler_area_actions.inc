@@ -6,23 +6,30 @@
  */
 
 /**
- * MBP area with file actions
+ * MBP area with file actions.
  *
  * @ingroup views_area_handlers
  */
 class media_browser_plus_views_handler_area_actions extends views_handler_area {
 
-  function option_definition() {
+  /**
+   * Define the handler options.
+   */
+  public function option_definition() {
     $options['mbp_action_area'] = array(
       'contains' => array(
-        'actions' => array('default' => array('view', 'edit', 'delete')),
+        'actions' => array(
+          'default' => array('view', 'edit', 'delete', 'download'),
+        ),
       ),
     );
-
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  /**
+   * Options form to configure the enabled actions.
+   */
+  public function options_form(&$form, &$form_state) {
     $form['mbp_action_area'] = array(
       '#type' => 'fieldset',
       '#title' => t('Media Browser Plus Settings'),
@@ -57,9 +64,10 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
     );
   }
 
-  function render($empty = FALSE) {
-
-
+  /**
+   * Returns the action buttons and sets the JS configuration.
+   */
+  public function render($empty = FALSE) {
     $output = '';
     $actions = array();
     foreach ($this->options['mbp_action_area']['actions'] as $key => $action) {
@@ -85,7 +93,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
   /**
    * Renders the output for the edit action.
    */
-  function render_action_edit() {
+  public function render_action_edit() {
     $element = array(
       '#type' => 'button',
       '#name' => 'mbp-action-edit',
@@ -100,7 +108,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
   /**
    * Renders the output for the delete action.
    */
-  function render_action_delete() {
+  public function render_action_delete() {
     $element = array(
       '#type' => 'button',
       '#name' => 'mbp-action-delete',
@@ -115,7 +123,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
   /**
    * Renders the output for the basket action.
    */
-  function render_action_basket() {
+  public function render_action_basket() {
     $element = array(
       '#type' => 'button',
       '#name' => 'mbp-action-basket',
@@ -130,7 +138,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
   /**
    * Renders the output for the delete action.
    */
-  function render_action_download() {
+  public function render_action_download() {
     $element = array(
       '#type' => 'button',
       '#name' => 'mbp-action-download',
@@ -141,5 +149,4 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
     );
     return render($element);
   }
-
 }

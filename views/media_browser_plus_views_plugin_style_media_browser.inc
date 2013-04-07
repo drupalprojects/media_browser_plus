@@ -18,10 +18,9 @@ class media_browser_plus_views_plugin_style_media_browser extends media_views_pl
   /**
    * Set default options.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
-    $options['show_folders'] = array('default' => TRUE);
     $options['files_draggable'] = array('default' => TRUE);
     $options['folders_draggable'] = array('default' => TRUE);
 
@@ -31,16 +30,14 @@ class media_browser_plus_views_plugin_style_media_browser extends media_views_pl
   /**
    * Always render this style to ensure the additions are displayed.
    */
-  function even_empty() {
+  public function even_empty() {
     return TRUE;
   }
 
   /**
-   * Render the given style.
+   * Provide options.
    */
-  function options_form(&$form, &$form_state) {
-    // parent::options_form($form, $form_state);
-
+  public function options_form(&$form, &$form_state) {
     $form['files_draggable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable drag and drop for files'),

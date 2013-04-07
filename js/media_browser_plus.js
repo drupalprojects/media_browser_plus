@@ -71,12 +71,9 @@
     });
 
     // Hide exposed folder filter.
-    this.getFolderFilterWrapper().hide();
+    this.element.find('div.form-item-mbp-current-folder:has(:input[name=mbp_current_folder])').hide();
     // Initialize the folder structure.
-    var currentFolder = this.getFolderFilter().val();
-    if (currentFolder == 'All') {
-      currentFolder = this.getFolderFilter().find('option')[1].value;
-    }
+    var currentFolder = this.element.find(':input[name=mbp_current_folder]').val();
     if (currentFolder) {
       this.element
         .find('li:has(>.folder-id-' + currentFolder + ')').addClass('active')
@@ -238,24 +235,8 @@
       .find('input.vbo-select')
       .unbind('.mbp')
       .show();
-    this.getFolderFilterWrapper().show();
+    this.element.find('div.views-exposed-widget:has(:input[name=mbp_current_folder])').show();
     this.element.find('.mbp-action-').unbind('.mbp');
-  };
-
-  MBP.prototype.getFolderFilter = function () {
-    if (this.options.folder_filter_id) {
-      return this.element.find(':input[name=' + this.options.folder_filter_id + ']');
-    }
-    // Return an empty element, that way it stays chainable.
-    return $();
-  };
-
-  MBP.prototype.getFolderFilterWrapper = function () {
-    if (this.options.folder_filter_id) {
-      return this.element.find('div.views-exposed-widget:has(:input[name=' + this.options.folder_filter_id + '])');
-    }
-    // Return an empty element, that way it stays chainable.
-    return $();
   };
 
   MBP.prototype.folderOpen = function(folder) {
@@ -272,10 +253,12 @@
 
   // Loads the files of a folder.
   MBP.prototype.loadFiles = function(folder_id) {
-    if (this.getFolderFilter().length && this.getFolderFilter().val() != folder_id) {
-      this.getFolderFilter().val(folder_id).trigger('change');
+    if (this.element.find(':input[name=mbp_current_folder]').length && this.element.find(':input[name=mbp_current_folder]').val() != folder_id) {
+      this.element.find(':input[name=mbp_current_folder]').val(folder_id).trigger('change');
       this.element.find('li.active').removeClass('active');
-      this.element.find('li:has(>.folder-id-' + folder_id + ')').addClass('active');
+      this.element.find('li:has(>.folder-id-' + folder_id + ')')
+        .addClass('active')
+        .prepend('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
     }
   }
 

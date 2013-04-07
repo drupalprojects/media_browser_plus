@@ -114,12 +114,14 @@ function media_browser_plus_menu_local_tasks_alter(&$data, $router_item, $root_p
         '#weight' => $item['weight'],
       );
     }
+  }
+  if ($root_path == 'admin/content/file/mbp' || (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE) && $root_path == 'admin/content/file')) {
     $item = menu_get_item('admin/structure/taxonomy/media_folders');
     if (!empty($item['access'])) {
       $data['actions']['output'][] = array(
         '#theme' => 'menu_local_action',
         '#link' => $item,
-        '#weight' => $item['weight'],
+        '#weight' => 10,
       );
     }
   }

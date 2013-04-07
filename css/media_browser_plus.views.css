@@ -44,6 +44,10 @@
   display: none;
 }
 
+.view .mbp-folders li .ajax-progress-throbber {
+  float: left;
+}
+
 .view .mbp-file-list {
   float: right;
   width: 80%;
