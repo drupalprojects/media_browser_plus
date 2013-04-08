@@ -155,6 +155,21 @@ function media_browser_plus_library() {
 }
 
 /**
+ * Implements hook_field_attach_create_bundle().
+ */
+function media_browser_plus_field_attach_create_bundle($entity_type, $bundle) {
+  // Ensure the folder field is added if a new file bundle is created.
+  if ($entity_type == 'file') {
+    $field = field_info_field('field_folder');
+    $field['bundle'] = $bundle;
+    $instance_info = field_info_instance($field['entity_type'], $field['field_name'], $field['bundle']);
+    if (empty($instance_info)) {
+      field_create_instance($field);
+    }
+  }
+}
+
+/**
  * Implements hook_action_info().
  */
 function media_browser_plus_action_info() {
@@ -335,20 +350,37 @@ function media_browser_plus_file_entity_access($op, $files = NULL, $account = NU
 function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
   $root_folder = FALSE;
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
+  if (!$vocabulary) {
+    $vocabulary = (object) array(
+      'name' => 'Media Folders',
+      'description' => st('Use media folders to organize your media'),
+      'machine_name' => 'media_folders',
+      'hierarchy' => 1,
+      'help' => st('Enter a concise name for the media folder'),
+    );
+    taxonomy_vocabulary_save($vocabulary);
+  }
   if ($vocabulary) {
-    // Fetch the media root term.
-    $results = taxonomy_get_term_by_name('Media Root', 'media_folders');
-    if (!empty($results)) {
-      $root_folder = reset($results);
-    }
-    elseif ($autocreate) {
-      $root_folder = new stdClass();
-      $root_folder->name = 'Media Root';
-      $root_folder->description = 'default media folder';
-      $root_folder->vid = $vocabulary->vid;
-      $root_folder->weight = '-10';
-      // Save (default folder) term.
-      taxonomy_term_save($root_folder);
+    $root_folder = taxonomy_term_load(variable_get('media_browser_plus_root_folder_tid'));
+    if ($root_folder === FALSE) {
+      if ($autocreate) {
+        $root_folder = new stdClass();
+        $root_folder->name = 'Media Root';
+        $root_folder->description = 'default media folder';
+        $root_folder->vid = $vocabulary->vid;
+        $root_folder->weight = '-10';
+        taxonomy_term_save($root_folder);
+        variable_set('media_browser_plus_root_folder_tid', $root_folder->tid);
+      }
+      else {
+        watchdog(
+          'media_browser_plus',
+          'Unable to load the media root folder term. Please check the folder management!',
+          array(),
+          WATCHDOG_ERROR,
+          'admin/structure/taxonomy/' . $vocabulary->machine_name
+        );
+      }
     }
   }
   return $root_folder;
@@ -451,6 +483,11 @@ function media_browser_plus_taxonomy_term_presave($term) {
     // A folder term can just have one parent.
     if (count($term->parent) > 1) {
       $term->parent = array(reset($term->parent));
+    }
+    // For now it's not allowed to change the name of the root folder.
+    // @todo make name of the root folder configurable.
+    if ($term->tid == $root_folder->tid) {
+      $root_folder->name = 'Media Root';
     }
     // Actions if this is an existing term.
     if (!empty($term->tid)) {
