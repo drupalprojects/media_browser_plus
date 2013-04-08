@@ -15,10 +15,20 @@
 class media_browser_plus_views_handler_area_navigation extends views_handler_area_view {
 
   /**
-   * Add folder filter to the query.
+   * Initialize the handler.
    *
    * This is kind of hackish, how is this done properly?
    * @todo Review / refactor to meet the proper views coding style.
+   */
+  public function init(&$view, &$options) {
+    parent::init($view, $options);
+    // @todo Review / refactor to meet the proper views coding style.
+    $this->table = 'field_data_field_folder';
+    $this->real_field = 'field_folder_tid';
+  }
+
+  /**
+   * Add folder filter to the query.
    */
   public function query() {
     if (!empty($this->view->exposed_data['mbp_current_folder'])) {
@@ -32,8 +42,6 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
       $root_folder = media_browser_plus_get_media_root_folder();
       $this->value = $root_folder->tid;
     }
-    $this->table = 'field_data_field_folder';
-    $this->real_field = 'field_folder_tid';
     $this->ensure_my_table();
     $this->query->add_where(1, "$this->table_alias.$this->real_field", $this->value, '=');
   }
