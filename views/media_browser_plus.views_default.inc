@@ -157,6 +157,7 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['table'] = 'file_managed';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['field'] = 'media_browser_plus_views_handler_area_navigation';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['label'] = '';
+  $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['view_to_insert'] = 'media_browser_plus_folders:default';
   /* No results behavior: Global: Text area */
   $handler->display->display_options['empty']['area']['id'] = 'area';
   $handler->display->display_options['empty']['area']['table'] = 'views';
