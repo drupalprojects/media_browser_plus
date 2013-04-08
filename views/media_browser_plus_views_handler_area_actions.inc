@@ -16,6 +16,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
    * Define the handler options.
    */
   public function option_definition() {
+    $options = parent::option_definition();
     $options['mbp_action_area'] = array(
       'contains' => array(
         'actions' => array(

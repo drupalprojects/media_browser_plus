@@ -156,6 +156,7 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['id'] = 'media_browser_plus_views_handler_area_navigation';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['table'] = 'file_managed';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['field'] = 'media_browser_plus_views_handler_area_navigation';
+  $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['label'] = '';
   /* No results behavior: Global: Text area */
   $handler->display->display_options['empty']['area']['id'] = 'area';
   $handler->display->display_options['empty']['area']['table'] = 'views';
@@ -277,9 +278,23 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['id'] = 'media_browser_plus_views_handler_area_navigation';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['table'] = 'file_managed';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['field'] = 'media_browser_plus_views_handler_area_navigation';
-  $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['label'] = 'media_browser_plus_views_handler_area_navigation';
+  $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['label'] = '';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['view_to_insert'] = 'media_browser_plus_folders:default';
   $handler->display->display_options['defaults']['footer'] = FALSE;
+  /* Footer: Media browser plus: Actions */
+  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['id'] = 'media_browser_plus_views_handler_area_actions';
+  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['table'] = 'file_managed';
+  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['field'] = 'media_browser_plus_views_handler_area_actions';
+  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['mbp_action_area']['actions'] = array(
+    0 => 'view',
+    1 => 'edit',
+    2 => 'delete',
+    3 => 'download',
+    'edit' => 'edit',
+    'delete' => 'delete',
+    'download' => 'download',
+    'basket' => 0,
+  );
   /* Footer: Media browser plus: Basket */
   $handler->display->display_options['footer']['media_browser_plus_views_handler_area_basket']['id'] = 'media_browser_plus_views_handler_area_basket';
   $handler->display->display_options['footer']['media_browser_plus_views_handler_area_basket']['table'] = 'file_managed';
@@ -399,7 +414,6 @@ function media_browser_plus_views_management() {
     t('My files (MBP)'),
     t('User who uploaded'),
     t('Media Browser Plus'),
-    t('media_browser_plus_views_handler_area_navigation'),
   );
   return $view;
 }

@@ -24,7 +24,28 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
     parent::init($view, $options);
     // @todo Review / refactor to meet the proper views coding style.
     $this->table = 'field_data_field_folder';
-    $this->real_field = 'field_folder_tid';
+  }
+
+  /**
+   * Define options.
+   *
+   * @todo Review / refactor to meet the proper views coding style.
+   */
+  public function option_definition() {
+    $options = parent::option_definition();
+    $this->definition['field'] = 'field_folder_tid';
+    $options['table'] = array('default' => 'field_data_field_folder');
+    $options['field'] = array('default' => 'field_folder_tid');
+    return $options;
+  }
+
+  /**
+   * Remove label from options form.
+   */
+  public function options_form(&$form, &$form_state) {
+    $options = parent::options_form($form, $form_state);
+    unset($form['label']);
+    return $options;
   }
 
   /**
