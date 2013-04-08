@@ -10,6 +10,7 @@
 function media_browser_plus_views_api() {
   return array(
     'api' => 3,
+    'path' => drupal_get_path('module', 'media_browser_plus') . '/views',
   );
 }
 
@@ -80,7 +81,7 @@ function media_browser_plus_menu() {
  */
 function media_browser_plus_menu_alter(&$items) {
   // If enabled replace the default file browser by mbp.
-  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE)) {
+  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE) && isset($items['admin/content/file/mbp'])) {
     $items['admin/content/file/list'] = $items['admin/content/file'];
 
     $file_title = $items['admin/content/file']['title'];
@@ -370,7 +371,9 @@ function media_browser_plus_construct_dir_path($term = NULL) {
   if ($root_folder = variable_get('media_root_folder')) {
     $path = $root_folder;
   }
-  if (!variable_get('filesystem_folders', TRUE)) {
+  // Always return the path to the defined media_root_folder if the folder
+  // handling is disabled.
+  if (!variable_get('media_browser_plus_filesystem_folders', TRUE)) {
     return variable_get('file_default_scheme', 'public') . '://' . trim($path, '/');
   }
   $root_folder_term = media_browser_plus_get_media_root_folder();
@@ -552,7 +555,7 @@ function media_browser_plus_taxonomy_term_delete($term) {
  * overview won't trigger any term hooks *blargh* :|
  */
 function media_browser_plus_form_taxonomy_overview_terms_alter(&$form, &$form_state, $vocabulary) {
-  if (variable_get('filesystem_folders', TRUE) && $form['#vocabulary']->machine_name == 'media_folders') {
+  if ($form['#vocabulary']->machine_name == 'media_folders') {
     $form['#validate'][] = 'media_browser_plus_form_taxonomy_overview_terms_validate';
     $form['#submit'][] = 'media_browser_plus_form_taxonomy_overview_terms_submit';
   }

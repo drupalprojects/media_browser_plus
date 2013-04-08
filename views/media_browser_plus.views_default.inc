@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * media_browser_plus.views_default.inc.php
+ * Provides the necessary default views for MBP.
  */
 
 
@@ -15,6 +15,7 @@ function media_browser_plus_views_default_views() {
   $views[$view->name] = $view;
 
   $view = media_browser_plus_views_management();
+  $view->disabled = variable_get('media_browser_plus_disable_default_view', FALSE);
   $views[$view->name] = $view;
 
   return $views;
@@ -182,12 +183,6 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['sorts']['count']['group_type'] = 'sum';
   $handler->display->display_options['sorts']['count']['exposed'] = TRUE;
   $handler->display->display_options['sorts']['count']['expose']['label'] = 'Use count';
-  /* Contextual filter: File: Media Folder (field_folder) */
-  $handler->display->display_options['arguments']['field_folder_tid']['id'] = 'field_folder_tid';
-  $handler->display->display_options['arguments']['field_folder_tid']['table'] = 'field_data_field_folder';
-  $handler->display->display_options['arguments']['field_folder_tid']['field'] = 'field_folder_tid';
-  $handler->display->display_options['arguments']['field_folder_tid']['default_argument_type'] = 'fixed';
-  $handler->display->display_options['arguments']['field_folder_tid']['summary']['format'] = 'default_summary';
   /* Filter criterion: File: Status */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'file_managed';
@@ -285,17 +280,6 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['label'] = 'media_browser_plus_views_handler_area_navigation';
   $handler->display->display_options['header']['media_browser_plus_views_handler_area_navigation']['view_to_insert'] = 'media_browser_plus_folders:default';
   $handler->display->display_options['defaults']['footer'] = FALSE;
-  /* Footer: Media browser plus: Actions */
-  $handler->display->display_options['footer']['media_browser_plus_views_handler_area_actions']['mbp_action_area']['actions'] = array(
-    0 => 'view',
-    1 => 'edit',
-    2 => 'delete',
-    3 => 'download',
-    'edit' => 'edit',
-    'delete' => 'delete',
-    'download' => 'download',
-    'basket' => 'basket',
-  );
   /* Footer: Media browser plus: Basket */
   $handler->display->display_options['footer']['media_browser_plus_views_handler_area_basket']['id'] = 'media_browser_plus_views_handler_area_basket';
   $handler->display->display_options['footer']['media_browser_plus_views_handler_area_basket']['table'] = 'file_managed';
@@ -407,7 +391,6 @@ function media_browser_plus_views_management() {
     t('No files found'),
     t('Upload date'),
     t('Use count'),
-    t('All'),
     t('File name'),
     t('Type'),
     t('Media browser'),

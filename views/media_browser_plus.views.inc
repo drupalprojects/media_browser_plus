@@ -13,9 +13,10 @@
 function media_browser_plus_views_plugins() {
   $plugins = array();
 
+  $path = drupal_get_path('module', 'media_browser_plus') . '/views';
+
   // Always allow the actual file-table
   $base = array('file_managed');
-
   if (module_exists('search_api')) {
     // If the Search API module exists, also allow indices of the file-entity
     // that has the fid field indexed.
@@ -33,6 +34,7 @@ function media_browser_plus_views_plugins() {
     'help' => t('Displays rows as an HTML list including the folder management.'),
     'handler' => 'media_browser_plus_views_plugin_style_media_browser',
     'theme' => 'media_browser_plus_views_view_media_browser',
+    'theme path' => $path,
     'base' => $base,
     'uses row plugin' => TRUE,
     'uses row class' => FALSE,
@@ -89,6 +91,7 @@ function media_browser_plus_views_data_alter(&$data) {
     'title' => t('Navigation'),
     'group' => t('Media browser plus'),
     'help' => t('Area to navigate using the folder structure.'),
+    'table' => 'field_data_field_folder',
     'area' => array(
       'handler' => 'media_browser_plus_views_handler_area_navigation',
     ),

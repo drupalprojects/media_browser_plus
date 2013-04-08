@@ -157,14 +157,8 @@ function _media_browser_plus_ensure_instance($instance) {
  * Implements hook_enable().
  */
 function media_browser_plus_enable() {
-  // Save default settings.
-  variable_set('media_browser_plus_thumbnails_as_default_browser', TRUE);
-  variable_set('filesystem_folders', TRUE);
-
   // Create the media folder.
   media_browser_plus_get_media_root_folder(TRUE);
-  $dir = variable_get('file_default_scheme', 'public') . '://' . variable_get('media_root_folder') . '/';
-  file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 }
 
 /**
@@ -173,7 +167,8 @@ function media_browser_plus_enable() {
 function media_browser_plus_uninstall() {
   variable_del('media_root_folder');
   variable_del('media_browser_plus_thumbnails_as_default_browser');
-  variable_del('filesystem_folders');
+  variable_del('media_browser_plus_filesystem_folders');
+  variable_der('media_browser_plus_disable_default_view');
 }
 
 /**
