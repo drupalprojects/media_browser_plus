@@ -663,3 +663,75 @@ function media_browser_plus_update_folder_hierarchy_batch_complete($success, $re
     drupal_set_message(t('Error while updating folder structure'), 'error');
   }
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function media_browser_plus_form_file_entity_add_upload_multiple_alter(&$form, &$form_state) {
+  // Abuse the taxonomy term field widget to get the available options.
+  $field['settings']['allowed_values'][] = array(
+    'vocabulary' => 'media_folders',
+    'parent' => 0,
+  );
+  $form['field_folder'] = array(
+    '#type' => 'select',
+    '#title' => t('Folder'),
+    '#description' => t('Defines the folder where the uploaded files will be saved'),
+    '#options' => taxonomy_allowed_values($field),
+  );
+  // Add own submit handler to set the selected folder in the file objects.
+  $form['#submit'][] = 'media_browser_plus_form_file_entity_add_upload_multiple_submit';
+}
+
+/**
+ * Submit handler to set the folder selected in the multiple upload form.
+ */
+function media_browser_plus_form_file_entity_add_upload_multiple_submit(&$form, &$form_state) {
+  // Iterate over all saved files and add the folder setting.
+  if (isset($form_state['values']['field_folder'])) {
+    $folder = $form_state['values']['field_folder'];
+    foreach ($form_state['files'] as $fid => $file) {
+      // Only set folder if not set or different to what will be set.
+      if (empty($file->field_folder[LANGUAGE_NONE][0]['tid']) || $file->field_folder[LANGUAGE_NONE][0]['tid'] != $folder) {
+        $file->field_folder[LANGUAGE_NONE][0]['tid'] = $folder;
+        file_save($file);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_state) {
+  // This isn't really necessary but ensures the usage consistency over all
+  // upload forms.
+  switch ($form['#step']) {
+    // Add folder selection to the upload form.
+    case 1:
+      // By re-using the field form structure we can inject the value into the
+      // next step.
+      // @todo Check if we can replace this somehow by the real field widget.
+      $form['field_folder'] = array(
+        '#type' => 'container',
+        '#tree' => TRUE,
+      );
+      // Abuse the taxonomy term field widget to get the available options.
+      $field['settings']['allowed_values'][] = array(
+        'vocabulary' => 'media_folders',
+        'parent' => 0,
+      );
+      $form['field_folder'][LANGUAGE_NONE] = array(
+        '#type' => 'select',
+        '#title' => t('Folder'),
+        '#description' => t('Defines the folder where the uploaded files will be saved'),
+        '#options' => taxonomy_allowed_values($field),
+      );
+      break;
+
+    // Nothing to do for now.
+    case 2:
+    case 3:
+  }
+}
+
