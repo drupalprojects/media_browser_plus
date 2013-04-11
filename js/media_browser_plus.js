@@ -204,6 +204,16 @@
         }
       })
       .hide();
+    $('.vbo-select-this-page', this.element).click(function() {
+      $('input.vbo-select', this.element)
+        .attr('checked', this.checked)
+        .trigger('change');
+    });
+    $('.vbo-select-all-pages', this.element).click(function() {
+      $('input.vbo-select', this.element)
+        .attr('checked', this.checked)
+        .trigger('change');
+    });
     // If there are links and vbo selects navigate only on dbl clicks.
     this.element.find('.mbp-file-list li:has(.vbo-select):has(a)')
       .bind('dblclick.mbp', function(e) {
