@@ -77,3 +77,7 @@ div.view-media-browser-plus .media-list-thumbnails .form-type-checkbox {
   margin: 0px;
   padding: 0px;
 }
+
+.mbp-file-basket.drag-hover {
+  background-color: #e0e0d8;
+}
