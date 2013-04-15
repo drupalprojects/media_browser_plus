@@ -77,7 +77,7 @@ function media_browser_plus_uninstall() {
 /**
  * Update from 2.x to 3.x branch.
  */
-function media_browser_plus_update_7002() {
+function media_browser_plus_update_7300() {
   // Set weight.
   db_query("UPDATE {system} SET weight = 11 WHERE name = 'media_browser_plus'");
 
