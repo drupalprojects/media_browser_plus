@@ -94,22 +94,26 @@ function media_browser_plus_move_root_folder_complete($success, $results, $opera
  */
 function media_browser_plus_move_subfolder($folder, $source, $destination) {
   $operations = array();
-  if ($source != $destination) {
-    // This will move all subfolders too. Thus we have to handle all child
-    // folder terms as well.
-    file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-    media_browser_plus_move_physical_folder($source, $destination);
-  }
-  // @todo We could this move into the condition, but this way it's more stable.
-  // Update files in folder and subfolders get folders.
-  $folders = array($folder->tid);
+  foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+    $source_path = file_stream_wrapper_uri_normalize($scheme . '://' . $source);
+    $destination_path = file_stream_wrapper_uri_normalize($scheme . '://' . $destination);
+    if ($source != $destination) {
+      // This will move all subfolders too. Thus we have to handle all child
+      // folder terms as well.
+      file_prepare_directory($destination_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+      media_browser_plus_move_physical_folder($source_path, $destination_path);
+    }
+    // @todo We could this move into the condition, but this way it's more stable.
+    // Update files in folder and subfolders get folders.
+    $folders = array($folder->tid);
 
-  // Fetch all sub-folders.
-  $sub_folders = taxonomy_get_tree($folder->vid, $folder->tid);
-  foreach ($sub_folders as $sub_folder) {
-    $folders[] = $sub_folder->tid;
+    // Fetch all sub-folders.
+    $sub_folders = taxonomy_get_tree($folder->vid, $folder->tid);
+    foreach ($sub_folders as $sub_folder) {
+      $folders[] = $sub_folder->tid;
+    }
+    $operations[] = array('media_browser_plus_folder_update_file_locations_batch', array($folders));
   }
-  $operations[] = array('media_browser_plus_folder_update_file_locations_batch', array($folders));
 
   return $operations;
 }
@@ -160,7 +164,7 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
       // Update file path.
       $source = clone $file;
       $path = media_browser_plus_construct_dir_path(taxonomy_term_load($file->field_folder[LANGUAGE_NONE][0]['tid']));
-      $file->uri = file_stream_wrapper_uri_normalize($path . '/' . basename($file->uri));
+      $file->uri = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . $path . '/' . basename($file->uri));
       // Check if the uri has changed.
       if ($file->uri !== $source->uri) {
         // Check if the source file still exists, if so move the file.

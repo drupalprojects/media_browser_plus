@@ -345,7 +345,8 @@ function media_browser_plus_file_entity_access($op, $files = NULL, $account = NU
  *   Creates the folder if necessary.
  *
  * @return object|FALSE
- *   The folder term or FALSE if not found.
+ *   The folder term or FALSE if not found. During installation this can return
+ *   FALSE!
  */
 function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
   $root_folder = FALSE;
@@ -369,6 +370,7 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
         $root_folder->description = 'default media folder';
         $root_folder->vid = $vocabulary->vid;
         $root_folder->weight = '-10';
+        $root_folder->parent = 0;
         taxonomy_term_save($root_folder);
         variable_set('media_browser_plus_root_folder_tid', $root_folder->tid);
       }
@@ -387,7 +389,7 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
 }
 
 /**
- * Construct the path of a media_folder term.
+ * Construct the path of a media_folder term without scheme.
  *
  * Always returns the same path if the filesystem handling is disabled.
  *
@@ -396,7 +398,8 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
  *   returned.
  *
  * @return string
- *   The path to the requested folder. Without a trailing slash.
+ *   The path to the requested folder. Without the scheme and without a trailing
+ *   slash.
  */
 function media_browser_plus_construct_dir_path($term = NULL) {
   $path = '';
@@ -406,10 +409,11 @@ function media_browser_plus_construct_dir_path($term = NULL) {
   // Always return the path to the defined media_root_folder if the folder
   // handling is disabled.
   if (!variable_get('media_browser_plus_filesystem_folders', TRUE)) {
-    return variable_get('file_default_scheme', 'public') . '://' . trim($path, '/');
+    return trim($path, '/');
   }
+  // $root_folder_term can be FALSE during the installation of the module.
   $root_folder_term = media_browser_plus_get_media_root_folder();
-  if ($term && $term->tid != $root_folder_term->tid) {
+  if ($term && $root_folder_term && $term->tid != $root_folder_term->tid) {
     $parents = array_reverse(taxonomy_get_parents_all($term->tid));
     array_pop($parents);
     if (is_array($parents) && !empty($parents)) {
@@ -421,7 +425,7 @@ function media_browser_plus_construct_dir_path($term = NULL) {
     }
     $path = file_create_filename($term->name, $path);
   }
-  $path = variable_get('file_default_scheme', 'public') . '://' . trim($path, '/');
+  $path = trim($path, '/');
   return $path;
 }
 
@@ -457,8 +461,9 @@ function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME
       file_save($file);
       return TRUE;
     }
+
     $folder = taxonomy_term_load($tid);
-    $path = media_browser_plus_construct_dir_path($folder);
+    $path = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . media_browser_plus_construct_dir_path($folder));
     file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
     return file_move($file, $path, $replace);
   }
@@ -476,18 +481,19 @@ function media_browser_plus_taxonomy_term_presave($term) {
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
     // A subfolder term is always child of the root folder.
+    if (!is_array($term->parent)) {
+      $term->parent = array($term->parent);
+    }
     if (empty($term->parent[0])) {
-      $root_folder = media_browser_plus_get_media_root_folder();
-      $term->parent = array($root_folder->tid);
+      // Condition is necessary to ensure we don't interfere while installing
+      // the module.
+      if ($root_folder = media_browser_plus_get_media_root_folder()) {
+        $term->parent = array($root_folder->tid);
+      }
     }
     // A folder term can just have one parent.
     if (count($term->parent) > 1) {
       $term->parent = array(reset($term->parent));
-    }
-    // For now it's not allowed to change the name of the root folder.
-    // @todo make name of the root folder configurable.
-    if ($term->tid == $root_folder->tid) {
-      $root_folder->name = 'Media Root';
     }
     // Actions if this is an existing term.
     if (!empty($term->tid)) {
@@ -504,7 +510,14 @@ function media_browser_plus_taxonomy_term_insert($term) {
   if ($term->vocabulary_machine_name == 'media_folders') {
     // Prepare path for new folder terms.
     $dir = media_browser_plus_construct_dir_path($term);
-    if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    $error = FALSE;
+    foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+      $path = file_stream_wrapper_uri_normalize($scheme . '://' . $dir);
+      if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+        $error = TRUE;
+      }
+    }
+    if (!$error) {
       drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
     }
     else {
@@ -576,9 +589,12 @@ function media_browser_plus_taxonomy_term_delete($term) {
       }
       // Also delete the folder when it's empty.
       if ($all_files_deleted) {
-        $folder_path = media_browser_plus_construct_dir_path($folder);
-        if (!@drupal_rmdir($folder_path)) {
-          drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+        $dir = media_browser_plus_construct_dir_path($folder);
+        foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+          $folder_path = file_stream_wrapper_uri_normalize($scheme . '://' . $dir);
+          if (!@drupal_rmdir($folder_path)) {
+            drupal_set_message(t('Unable to delete the folder (!path) on the disk', array('!path' => $folder_path)), 'error');
+          }
         }
       }
     }
