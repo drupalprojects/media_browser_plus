@@ -1,0 +1,9 @@
+name = Media Browser Plus Tests
+description = Media Browser Plus Tests.
+package = Testing
+core = 7.x
+hidden = TRUE
+
+dependencies[] = media_browser_plus
+
+files[] = media_browser_plus.test
