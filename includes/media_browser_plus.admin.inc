@@ -16,6 +16,10 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
     '#description' => t('If enabled the thumbnails view will displayed when accessing "admin/content/file".'),
     '#default_value' => variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE),
   );
+  $form['media_browser_plus_thumbnails_as_default_browser_current'] = array(
+    '#type' => 'value',
+    '#default_value' => variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE),
+  );
   $form['media_browser_plus_disable_default_view'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable the provided default view.'),
@@ -63,7 +67,6 @@ function media_browser_plus_media_settings($form, &$form_state = array()) {
   }
 
   return $form;
-
 }
 
 /**
@@ -83,5 +86,10 @@ function media_browser_plus_media_settings_submit($form, &$form_state) {
   if ($form_state['triggering_element']['#name'] == 'rebuild_folder_structure') {
     module_load_include('inc', 'media_browser_plus', 'includes/media_browser_plus.folders');
     media_browser_plus_rebuild_folder_structure();
+  }
+
+  // If the menu position of MBP was changed, rebuild the menu.
+  if ($form_state['values']['media_browser_plus_thumbnails_as_default_browser_current'] != $form_state['values']['media_browser_plus_thumbnails_as_default_browser']) {
+    menu_rebuild();
   }
 }
