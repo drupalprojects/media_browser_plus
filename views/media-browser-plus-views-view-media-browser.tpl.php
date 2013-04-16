@@ -8,7 +8,6 @@
  * @ingroup views_templates
  */
 ?>
-
 <?php print $wrapper_prefix; ?>
 <div class="clearfix">
 <?php if(!empty($folders)) : ?>

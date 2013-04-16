@@ -14,10 +14,10 @@ function media_browser_plus_install() {
 
 /**
  * Implements hook_enable().
+ *
+ * Ensure the necessary structures exist.
  */
 function media_browser_plus_enable() {
-  // Ensure the necessary structures exist.
-
   // Folder vocabulary and root term.
   $root_folder = media_browser_plus_get_media_root_folder(TRUE);
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');

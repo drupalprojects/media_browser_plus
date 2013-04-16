@@ -105,7 +105,7 @@ function media_browser_plus_move_subfolder($folder, $source, $destination) {
       file_prepare_directory($destination_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
       media_browser_plus_move_physical_folder($source_path, $destination_path);
     }
-    // @todo We could this move into the condition, but this way it's more stable.
+    // @todo This could move into the condition, but this way it's more stable.
     // Update files in folder and subfolders get folders.
     $folders = array($folder->tid);
 

@@ -772,4 +772,3 @@ function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_sta
     case 3:
   }
 }
-

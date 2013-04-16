@@ -26,7 +26,7 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
     // Ensure the link to the taxonomy management is available.
     // Just to have a verbose output.
     $this->drupalGet('admin/content/file/mbp');
-    $this->assertLinkByHref('admin/structure/taxonomy/media_folders',0 ,'Found link to folder taxonomy');
+    $this->assertLinkByHref('admin/structure/taxonomy/media_folders', 0, 'Found link to folder taxonomy');
 
     // Just to have a verbose output.
     $this->drupalGet('admin/structure/taxonomy/media_folders');
