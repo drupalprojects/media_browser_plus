@@ -105,15 +105,15 @@ class media_browser_plus_views_handler_area_basket extends views_handler_area {
   public function exposed_form(&$form, &$form_state) {
     $default_value = NULL;
     if (isset($_COOKIE['Drupal_visitor_mbp_basket'])) {
-      $fids = explode(' ', $_COOKIE['Drupal_visitor_mbp_basket']);
+      $fids = explode(' ', trim($_COOKIE['Drupal_visitor_mbp_basket']));
       // Sanitize.
       foreach ($fids as &$fid) {
         $fid = (int) $fid;
       }
-      $default_value = implode(' ', $fids);
+      $default_value = implode(' ', array_filter($fids));
     }
     $form['mbp_basket_files'] = array(
-      '#type' => 'hidden',
+      '#type' => 'textfield',
       '#title' => 'Media Basket selected files',
       '#default_value' => $default_value,
       '#attributes' => array(

@@ -30,7 +30,15 @@
       // Extract file id and store it - in cookie and exposed form.
       var file_id = this.id.replace(plugin.options.fileIdRegexp, '$1');
       plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val().replace(file_id, '').replace('  ', ' '));
-      $.cookie('Drupal.visitor.mbp.basket', plugin.element.find('input[name=mbp_basket_files]').val());
+      $.cookie(
+        'Drupal.visitor.mbp.basket',
+        plugin.element.find('input[name=mbp_basket_files]').val(),
+        {path: Drupal.settings.basePath}
+      );
+      // Update links.
+      plugin.element.find('a[href*="mbp_basket_files="]').each(function(index, link) {
+        link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent(plugin.element.find('input[name=mbp_basket_files]').val()) +  '$2');
+      });
       $(this).remove();
     };
 
@@ -39,7 +47,16 @@
         // Extract file id and store it - in cookie and exposed form.
         var file_id = item.id.replace(plugin.options.fileIdRegexp, '$1');
         plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val() + ' ' + file_id);
-        $.cookie('Drupal.visitor.mbp.basket', plugin.element.find('input[name=mbp_basket_files]').val());
+        $.cookie(
+          'Drupal.visitor.mbp.basket',
+          plugin.element.find('input[name=mbp_basket_files]').val(),
+          {path: Drupal.settings.basePath}
+        );
+        // Update links.
+        plugin.element.find('a[href*="mbp_basket_files="]').each(function(index, link) {
+          link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent(plugin.element.find('input[name=mbp_basket_files]').val()) +  '$2');
+        });
+        // Add item to list.
         plugin.element.find('.mbp-file-basket-list').append(item);
         $(item)
           .click(plugin.removeItemFromBasket)
