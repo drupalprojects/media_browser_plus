@@ -29,35 +29,35 @@
     this.removeItemFromBasket = function(item) {
       // Extract file id and store it - in cookie and exposed form.
       var file_id = this.id.replace(plugin.options.fileIdRegexp, '$1');
-      plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val().replace(file_id, '').replace('  ', ' '));
+      $('input[name=mbp_basket_files]', plugin.element).val($('input[name=mbp_basket_files]', plugin.element).val().replace(file_id, '').replace('  ', ' '));
       $.cookie(
         'Drupal.visitor.mbp.basket',
-        plugin.element.find('input[name=mbp_basket_files]').val(),
+        $('input[name=mbp_basket_files]', plugin.element).val(),
         {path: Drupal.settings.basePath}
       );
       // Update links.
-      plugin.element.find('a[href*="mbp_basket_files="]').each(function(index, link) {
-        link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent(plugin.element.find('input[name=mbp_basket_files]').val()) +  '$2');
+      $('a[href*="mbp_basket_files="]', plugin.element).each(function(index, link) {
+        link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent($('input[name=mbp_basket_files]', plugin.element).val()) +  '$2');
       });
       $(this).remove();
     };
 
     this.addItemToBasked = function (item) {
-      if (!plugin.element.find('.mbp-file-basket-list').find('#' + item.id).length) {
+      if (!$('.mbp-file-basket-list', plugin.element).find('#' + item.id).length) {
         // Extract file id and store it - in cookie and exposed form.
         var file_id = item.id.replace(plugin.options.fileIdRegexp, '$1');
-        plugin.element.find('input[name=mbp_basket_files]').val(plugin.element.find('input[name=mbp_basket_files]').val() + ' ' + file_id);
+        $('input[name=mbp_basket_files]', plugin.element).val($('input[name=mbp_basket_files]', plugin.element).val() + ' ' + file_id);
         $.cookie(
           'Drupal.visitor.mbp.basket',
-          plugin.element.find('input[name=mbp_basket_files]').val(),
+          $('input[name=mbp_basket_files]', plugin.element).val(),
           {path: Drupal.settings.basePath}
         );
         // Update links.
-        plugin.element.find('a[href*="mbp_basket_files="]').each(function(index, link) {
-          link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent(plugin.element.find('input[name=mbp_basket_files]').val()) +  '$2');
+        $('a[href*="mbp_basket_files="]', plugin.element).each(function(index, link) {
+          link.href = link.href.replace(/(&|)mbp_basket_files=.*?(\#|\&|$)/, '$1mbp_basket_files=' + encodeURIComponent($('input[name=mbp_basket_files]', plugin.element).val()) +  '$2');
         });
         // Add item to list.
-        plugin.element.find('.mbp-file-basket-list').append(item);
+        $('.mbp-file-basket-list', plugin.element).append(item);
         $(item)
           .click(plugin.removeItemFromBasket)
           .find('a').click(function(e) {
@@ -71,7 +71,7 @@
 
   MBP.prototype.init = function () {
     var plugin = this;
-    this.element.find('.mbp-folders li').bind('click.mbp', function(e) {
+    $('.mbp-folders li', this.element).bind('click.mbp', function(e) {
       // A click on the icon just opens the folder structure.
       if (!$(e.target).hasClass('icon')) {
         plugin.loadFiles($(this).children('div.folder-name').attr('class').replace(plugin.options.folderIdRegexp, '$1'));
@@ -88,28 +88,28 @@
     });
 
     // Hide exposed folder filter.
-    this.element.find('div.form-item-mbp-current-folder:has(:input[name=mbp_current_folder])').hide();
+    $('div.form-item-mbp-current-folder:has(:input[name=mbp_current_folder])', this.element).hide();
     // Initialize the folder structure.
-    var currentFolder = this.element.find(':input[name=mbp_current_folder]').val();
+    var currentFolder = $(':input[name=mbp_current_folder]', this.element).val();
     if (currentFolder) {
       this.element
         .find('li:has(>.folder-id-' + currentFolder + ')').addClass('active')
         .find('ol:first').show();
-      var folder = this.element.find('.folder-id-' + currentFolder).show();
+      var folder = $('.folder-id-' + currentFolder, this.element).show();
       folder.parents('ol').show();
       folder.parents('li').addClass('open');
     }
 
     // Enable drag n drop.
     if (this.options.files_draggable) {
-      this.element.find('.mbp-file-list li').draggable({
+      $('.mbp-file-list li', this.element).draggable({
         iframeFix: true,
         opacity: 0.7,
         revert: 'invalid',
         zIndex: 999,
         helper: function(){
           // Support grouping of draggables.
-          var selected = plugin.element.find('li:has(input.vbo-select:checked)');
+          var selected = $('li:has(input.vbo-select:checked)', plugin.element);
           if (selected.length === 0) {
             selected = $(this);
           }
@@ -121,14 +121,14 @@
     }
     // @todo Add folder management.
     if (this.options.folders_draggable) {
-//      this.element.find('.mbp-folders li').draggable({
+//      $('.mbp-folders li', this.element).draggable({
 //        iframeFix: true,
 //        opacity: 0.7,
 //        revert: 'invalid'
 //      });
     }
     if (this.options.files_draggable || this.options.folders_draggable) {
-      this.element.find('.mbp-folders li div.folder-name').droppable({
+      $('.mbp-folders li div.folder-name', this.element).droppable({
         hoverClass: 'drag-hover',
         tolerance: 'pointer',
         drop: function(event, ui) {
@@ -144,7 +144,7 @@
             var url = Drupal.settings.basePath + 'admin/content/file/' + file_id + '/move-to-folder/' + folder_id;
             // Add throbber to folder.
             target.prepend('<div class="ajax-progress ajax-progress-throbber media-item-' + file_id + '"><div class="throbber">&nbsp;</div></div>');
-            plugin.element.find('#' + item.attr('id')).remove();
+            $('#' + item.attr('id'), plugin.element).remove();
             $.ajax({
               url: url,
               success: function(data) {
@@ -179,17 +179,17 @@
 
     // Make media basked.
     if (this.options.media_basket ) {
-      this.element.find('.mbp-file-basket-list li')
+      $('.mbp-file-basket-list li', this.element)
         .click(this.removeItemFromBasket);
-      this.element.find('.mbp-file-basket input[name=mbp_basket_files_download]').click(function() {
+      $('.mbp-file-basket input[name=mbp_basket_files_download]', this.element).click(function() {
         window.setTimeout(function(){
-          plugin.element.find('.mbp-file-basket-list li').trigger('click');
+          $('.mbp-file-basket-list li', plugin.element).trigger('click');
         }, 1000);
-        window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/download-multiple/' + plugin.element.find('input[name=mbp_basket_files]').val();
+        window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/download-multiple/' + $('input[name=mbp_basket_files]', plugin.element).val();
       });
 
       if (this.options.files_draggable) {
-        this.element.find('.mbp-file-basket').droppable({
+        $('.mbp-file-basket', this.element).droppable({
           hoverClass: 'drag-hover',
           drop: function(event, ui) {
             var target = $(this);
@@ -202,7 +202,7 @@
     }
 
     // Hide the vbo checkboxes and handle them by JS.
-    this.element.find('.mbp-file-list li:has(.vbo-select)')
+    $('.mbp-file-list li:has(.vbo-select)', this.element)
       .bind('click.mbp', function(e) {
         if (!$(e.target).hasClass('vbo-select')) {
           $(this).find('input.vbo-select')
@@ -210,9 +210,9 @@
             .trigger('change');
         }
       });
-    this.element.find('.mbp-file-list li input.vbo-select')
+    $('.mbp-file-list li input.vbo-select', this.element)
       .bind('change.mbp', function(e) {
-        var media_item = plugin.element.find('#media-item-' + this.value + ' .media-item');
+        var media_item = $('#media-item-' + this.value + ' .media-item', plugin.element);
         if (this.checked) {
           media_item.addClass('selected');
         }
@@ -232,7 +232,7 @@
         .trigger('change');
     });
     // If there are links and vbo selects navigate only on dbl clicks.
-    this.element.find('.mbp-file-list li:has(.vbo-select):has(a)')
+    $('.mbp-file-list li:has(.vbo-select):has(a)', this.element)
       .bind('dblclick.mbp', function(e) {
         window.location.href = $(this).find('a').attr('href');
       })
@@ -243,7 +243,7 @@
     // Register actions
     for (var action in this.options.actions) {
       if (this[action + 'Files']) {
-        this.element.find('.mbp-action-' + action).bind('click.mbp',function() {
+        $('.mbp-action-' + action, this.element).bind('click.mbp',function() {
           var action = $(this).attr('class').replace(plugin.options.mbpActionRegexp, '$1');
           plugin[action + 'Files']();
         });
@@ -252,18 +252,18 @@
   };
 
   MBP.prototype.destroy = function () {
-    this.element.find('.mbp-folders li')
+    $('.mbp-folders li', this.element)
       .unbind('.mbp')
       .draggable('destroy')
       .droppable('destroy');
-    this.element.find('.mbp-file-list li')
+    $('.mbp-file-list li', this.element)
       .unbind('.mbp')
       .draggable('destroy')
       .find('input.vbo-select')
       .unbind('.mbp')
       .show();
-    this.element.find('div.views-exposed-widget:has(:input[name=mbp_current_folder])').show();
-    this.element.find('.mbp-action-').unbind('.mbp');
+    $('div.views-exposed-widget:has(:input[name=mbp_current_folder])', this.element).show();
+    $('.mbp-action-', this.element).unbind('.mbp');
   };
 
   MBP.prototype.folderOpen = function(folder) {
@@ -280,10 +280,10 @@
 
   // Loads the files of a folder.
   MBP.prototype.loadFiles = function(folder_id) {
-    if (this.element.find(':input[name=mbp_current_folder]').length && this.element.find(':input[name=mbp_current_folder]').val() != folder_id) {
-      this.element.find(':input[name=mbp_current_folder]').val(folder_id).trigger('change');
-      this.element.find('li.active').removeClass('active');
-      this.element.find('li:has(>.folder-id-' + folder_id + ')')
+    if ($(':input[name=mbp_current_folder]', this.element).length && $(':input[name=mbp_current_folder]', this.element).val() != folder_id) {
+      $(':input[name=mbp_current_folder]', this.element).val(folder_id).trigger('change');
+      $('li.active', this.element).removeClass('active');
+      $('li:has(>.folder-id-' + folder_id + ')', this.element)
         .addClass('active')
         .prepend('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
     }
@@ -292,7 +292,7 @@
   MBP.prototype.getSelectedFiles = function () {
     var fids = [];
     var plugin = this;
-    this.element.find('.mbp-file-list li:has(.media-item.selected)').each(function(i, item) {
+    $('.mbp-file-list li:has(.media-item.selected)', this.element).each(function(i, item) {
       fids.push(item.id.replace(plugin.options.fileIdRegexp, '$1'));
     });
     return fids;
@@ -307,7 +307,7 @@
 
   MBP.prototype.basketFiles = function () {
     var plugin = this;
-    var items = this.element.find('.mbp-file-list li:has(.media-item.selected)')
+    var items = $('.mbp-file-list li:has(.media-item.selected)', this.element)
     if (items.length) {
       items.each(function(index, item) {
         plugin.addItemToBasked(item);
