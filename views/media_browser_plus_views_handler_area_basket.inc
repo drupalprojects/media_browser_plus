@@ -82,6 +82,10 @@ class media_browser_plus_views_handler_area_basket extends views_handler_area {
       'setting'
     );
     drupal_add_library('media_browser_plus', 'media_browser_plus.area_actions');
+
+    // Hide this input from the pager. That way the cookie can do its work.
+    unset($this->view->exposed_raw_input['mbp_basket_files']);
+
     return $output;
   }
 
