@@ -117,7 +117,7 @@ class media_browser_plus_views_handler_area_basket extends views_handler_area {
       $default_value = implode(' ', array_filter($fids));
     }
     $form['mbp_basket_files'] = array(
-      '#type' => 'textfield',
+      '#type' => 'hidden',
       '#title' => 'Media Basket selected files',
       '#default_value' => $default_value,
       '#attributes' => array(
