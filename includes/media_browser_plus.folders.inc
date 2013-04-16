@@ -21,14 +21,14 @@ function media_browser_plus_move_root_folder($source, $destination) {
   if (!empty($destination)) {
     $destination .= '/';
   }
-  $scheme = variable_get('file_default_scheme', 'public') . '://';
-  $source = $scheme . $source;
-  $destination = $scheme . $destination;
-
-  file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-
   // Load root folder term.
   $root_folder_term = media_browser_plus_get_media_root_folder();
+
+  // Prepare destination.
+  foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+    $directory = file_stream_wrapper_uri_normalize($scheme . '://' . $destination);
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+  }
 
   // Move media files in root folder itself. We do this because if the root
   // folder was located in the default file directory of Drupal we can't move
@@ -41,7 +41,7 @@ function media_browser_plus_move_root_folder($source, $destination) {
   if (!empty($files['file'])) {
     $file_entities = file_load_multiple(array_keys($files['file']));
     foreach ($file_entities as $file_entity) {
-      file_move($file_entity, $destination);
+      file_move($file_entity, file_stream_wrapper_uri_normalize(file_uri_scheme($file_entity->uri) . '://' . $destination));
     }
   }
   // Collect the subfolder operations.
@@ -52,18 +52,20 @@ function media_browser_plus_move_root_folder($source, $destination) {
     'file' => drupal_get_path('module', 'media_browser_plus') . '/includes/media_browser_plus.folders.inc',
   );
 
-  // Move subfolders.
-  $root_subfolders = taxonomy_get_children($root_folder_term->tid);
-  foreach ($root_subfolders as $subfolder) {
-    $subfolder_source = media_browser_plus_construct_dir_path($subfolder);
-    $subfolder_destination = str_replace($source, $destination, $subfolder_source);
-    $batch['operations'] = array_merge($batch['operations'], media_browser_plus_move_subfolder($subfolder, $subfolder_source, $subfolder_destination));
-  }
   // Set the media root folder variable to the new destination.
   $batch['operations'][] = array(
     'variable_set',
     array('media_root_folder', trim($destination, '/')),
   );
+
+  // Move subfolders.
+  $root_subfolders = taxonomy_get_children($root_folder_term->tid);
+  foreach ($root_subfolders as $subfolder) {
+    $subfolder_source = media_browser_plus_construct_dir_path($subfolder);
+    $subfolder_destination = str_replace($source, $destination, $subfolder_source);
+    // Already takes care of multiple stream wrappers.
+    $batch['operations'] = array_merge($batch['operations'], media_browser_plus_move_subfolder($subfolder, $subfolder_source, $subfolder_destination));
+  }
   batch_set($batch);
 }
 
@@ -85,9 +87,9 @@ function media_browser_plus_move_root_folder_complete($success, $results, $opera
  * @param object $folder
  *   The _updated_ folder term. Is used to generate the destination.
  * @param string $source
- *   The current path.
+ *   The current path without scheme.
  * @param string $destination
- *   The new path. Including the directory name!
+ *   The new path. Including the directory name but without scheme!
  *
  * @return array
  *   A list of batch operations to execute to finish the job.
@@ -164,14 +166,16 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
       // Update file path.
       $source = clone $file;
       $path = media_browser_plus_construct_dir_path(taxonomy_term_load($file->field_folder[LANGUAGE_NONE][0]['tid']));
-      $file->uri = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . $path . '/' . basename($file->uri));
+      $file->uri = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . $path . '/' . drupal_basename($file->uri));
       // Check if the uri has changed.
       if ($file->uri !== $source->uri) {
         // Check if the source file still exists, if so move the file.
         clearstatcache();
-        if (file_exists($source->uri)) {
+        if (file_exists(drupal_realpath($source->uri))) {
           $context['handled_directories'][drupal_dirname($source->uri)] = drupal_dirname($source->uri);
-          file_unmanaged_move($source->uri, $file->uri, FILE_EXISTS_RENAME);
+          $destination = drupal_dirname($file->uri);
+          file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+          file_unmanaged_move($source->uri, $destination, FILE_EXISTS_RENAME);
         }
         // Save all the changes and inform other modules.
         file_save($file);
