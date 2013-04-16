@@ -557,9 +557,16 @@ function media_browser_plus_taxonomy_term_update($term) {
  * Implements hook_taxonomy_term_delete().
  */
 function media_browser_plus_taxonomy_term_delete($term) {
+  static $term_hierarchy_filter;
   // Figure out if this is a folder term and if so handle the related files.
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
+    // Skip if this term is already handled here by its parent term.
+    if (isset($term_hierarchy_filter[$term->tid])) {
+      unset($term_hierarchy_filter[$term->tid]);
+      return;
+    }
+
     // Create an array of all the folders to handle.
     $folders = array(
       '0:' . $term->tid => $term,
@@ -568,10 +575,13 @@ function media_browser_plus_taxonomy_term_delete($term) {
     $tree = taxonomy_get_tree($term->vid, $term->tid);
     foreach ($tree as $subterm) {
       $folders[($subterm->depth + 1) . ':' . $subterm->tid] = $subterm;
+      $term_hierarchy_filter[$subterm->tid] = $subterm->tid;
     }
     // Ensure the order for processing is right.
     krsort($folders);
 
+    $all_files_deleted = TRUE;
+    $used_files = array();
     foreach ($folders as $folder) {
       // Fetch all files from the folder.
       $file_query = new EntityFieldQuery();
@@ -579,13 +589,15 @@ function media_browser_plus_taxonomy_term_delete($term) {
         ->entityCondition('entity_type', 'file')
         ->fieldCondition('field_folder', 'tid', $folder->tid)
         ->execute();
-      $all_files_deleted = TRUE;
-      // If there are files, delete them.
+      // If there are files, delete them if possible.
       if (!empty($files['file'])) {
         $files = file_load_multiple(array_keys($files['file']));
         foreach ($files as $file) {
-          if (!file_delete($file)) {
+          if (($file_usage = file_delete($file)) !== TRUE) {
             $all_files_deleted = FALSE;
+            if (is_array($file_usage)) {
+              $used_files[$file->fid] = $file_usage;
+            }
           }
         }
       }
@@ -599,6 +611,14 @@ function media_browser_plus_taxonomy_term_delete($term) {
           }
         }
       }
+    }
+    if (!$all_files_deleted) {
+      $list = array();
+      foreach ($used_files as $fid => $usage) {
+        $file = file_load($fid);
+        $list['items'][] = l($file->filename, 'file/' . $fid . '/usage');
+      }
+      drupal_set_message(t("Some of the files in the folder are used and can't be deleted:") . theme('item_list', $list), 'error');
     }
   }
 }
