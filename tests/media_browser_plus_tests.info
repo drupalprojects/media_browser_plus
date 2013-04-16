@@ -6,4 +6,7 @@ hidden = TRUE
 
 dependencies[] = media_browser_plus
 
+files[] = media_browser_plus.base.test
 files[] = media_browser_plus.test
+files[] = media_browser_plus.root_folder.test
+
