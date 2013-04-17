@@ -480,16 +480,21 @@ function media_browser_plus_taxonomy_term_presave($term) {
   // for further processing in media_browser_plus_taxonomy_term_update().
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
-    // Ensure we're dealing with an array.
-    if (!is_array($term->parent)) {
-      $term->parent = array($term->parent);
-    }
-    // A folder term can just have one parent.
-    if (count($term->parent) > 1) {
-      $term->parent = array(reset($term->parent));
+    $parent = NULL;
+    // Check if parent handling is necessary.
+    if (isset($term->parent)) {
+      // Ensure we're dealing with an array.
+      if (!is_array($term->parent)) {
+        $term->parent = array($term->parent);
+      }
+      // A folder term can just have one parent.
+      if (count($term->parent) > 1) {
+        $term->parent = array(reset($term->parent));
+      }
+      // Fetch the used parent.
+      $parent = reset($term->parent);
     }
     // A subfolder term is always child of the root folder.
-    $parent = reset($term->parent);
     if (empty($parent)) {
       // Condition is necessary to ensure we don't interfere while installing
       // the module.
