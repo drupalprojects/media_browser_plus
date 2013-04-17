@@ -28,6 +28,7 @@
   list-style-type: none;
   margin: 2px 2px 2px 0px;
   margin-top: 4px;
+  width: 98%;
 }
 
 #folder ul {
@@ -47,6 +48,8 @@
   float: left;
   margin-right: 6px;
   width: 24px;
+  height: 24px;
+  display: block;
 }
 
 #folder li.parent > div.icon {
