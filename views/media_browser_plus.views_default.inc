@@ -138,7 +138,7 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['group_by'] = TRUE;
   $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'view files';
+  $handler->display->display_options['access']['perm'] = 'administer files';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['query']['options']['query_tags'] = array(
@@ -225,7 +225,6 @@ function media_browser_plus_views_management() {
   $handler = $view->new_display('media_browser', 'My files', 'media_browser_my_files');
   $handler->display->display_options['defaults']['title'] = FALSE;
   $handler->display->display_options['title'] = 'My files (MBP)';
-  $handler->display->display_options['enabled'] = FALSE;
   $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
   $handler->display->display_options['defaults']['access'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
