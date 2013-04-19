@@ -565,7 +565,9 @@ function media_browser_plus_edit_cancel($form, &$form_state) {
     unset($_GET['destination']);
   }
   if (isset($destination['destination'])) {
-    $form_state['redirect'] = $destination['destination'];
+    $parsed_url = parse_url($destination['destination']);
+    parse_str($parsed_url['query'], $query);
+    $form_state['redirect'] = array($parsed_url['path'], array('query' => $query));
   }
 }
 
