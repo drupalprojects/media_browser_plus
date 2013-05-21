@@ -2,9 +2,9 @@
  * Formatting the media browser plus views.
  */
 
-.view .mbp-folders {
-  float: left;
-  width: 19%;
+.view .mbp-folders,
+.view .mbp-file-list {
+  vertical-align: top;
 }
 
 .view .mbp-folders ol {
@@ -49,8 +49,6 @@
 }
 
 .view .mbp-file-list {
-  float: right;
-  width: 80%;
   border-left: 1px solid #cccccc;
   padding-left: 10px;
 }
