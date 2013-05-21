@@ -92,4 +92,7 @@ function media_browser_plus_update_7300() {
   variable_del('media_media_per_page');
   variable_del('media_grid_window_height');
   variable_del('media_page_items_per_page');
+
+  // Make sure the dependency modules are enabled.
+  module_enable(array('views_tree', 'views_bulk_operations'));
 }
