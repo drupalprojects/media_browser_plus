@@ -277,4 +277,81 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
     $this->drupalGet('admin/content/file');
     $this->assertText('Media Basket', 'Media Browser plus is default file handler');
   }
+
+  /**
+   * Test the ability to delete folders.
+   */
+  public function testFolderRename() {
+    $this->drupalLogin($this->adminUser);
+
+    // Create test folder structure.
+    $folders = array(
+      'source' => $this->randomName(),
+      'source_child' => $this->randomName(),
+    );
+    $hierarchy = array(
+      'root_folder' => array(
+        $folders['source'] => array(
+          $folders['source_child'] => array(),
+        ),
+      ),
+    );
+    $this->folderCreationHelper($hierarchy, FALSE);
+
+    $terms = taxonomy_get_term_by_name($folders['source']);
+    $source_folder = reset($terms);
+
+    // Create test files.
+    $files = array();
+    $folder_paths = array();
+    foreach ($folders as $type => $folder_name) {
+      $terms = taxonomy_get_term_by_name($folder_name);
+      $folder = reset($terms);
+      $folder_paths[$type] = media_browser_plus_construct_dir_path($folder);
+      foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+        $files[$scheme][$type][] = $this->createTestFile('text/plain', $folder, $scheme);
+        $files[$scheme][$type][] = $this->createTestFile('image/jpg', $folder, $scheme);
+      }
+    }
+    // Just to have a verbose output.
+    $this->drupalGet('admin/content/file/list');
+
+    // Rename the source folder.
+    $new_folder_name = $this->randomName();
+    $data = array(
+      'name' => $new_folder_name,
+    );
+    $this->drupalPost('taxonomy/term/' . $source_folder->tid . '/edit', $data, t('Save'));
+    $folders['source'] = $data['name'];
+
+    // Check if everything was moved properly.
+    entity_get_controller('taxonomy_term')->resetCache();
+    taxonomy_terms_static_reset();
+    foreach ($folders as $type => $folder_name) {
+      $terms = taxonomy_get_term_by_name($folder_name);
+      $folder = reset($terms);
+      $new_folder_path = media_browser_plus_construct_dir_path($folder);
+      $this->assertNotEqual(
+        $folder_paths[$type],
+        $new_folder_path,
+        format_string('Folder path changed: %source %destination', array(
+          '%source' => $folder_paths[$type],
+          '%destination' => $new_folder_path,
+        ))
+      );
+      foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+        $this->assertTrue(file_exists(drupal_realpath($scheme . '://' . $new_folder_path)), 'Folder found');
+        foreach ($files[$scheme][$type] as $file) {
+          $file_path = $file->uri;
+          $file = file_load($file->fid);
+          $new_file_path = $file->uri;
+          $this->assertNotEqual($new_file_path, $file_path, 'File path changed');
+          $this->assertTrue(file_exists($new_file_path), 'File found');
+        }
+      }
+    }
+
+    // Just to have a verbose output.
+    $this->drupalGet('admin/structure/taxonomy/media_folders');
+  }
 }
