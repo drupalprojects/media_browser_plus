@@ -62,7 +62,7 @@ function media_browser_plus_move_root_folder($source, $destination) {
   $root_subfolders = taxonomy_get_children($root_folder_term->tid);
   foreach ($root_subfolders as $subfolder) {
     $subfolder_source = media_browser_plus_construct_dir_path($subfolder);
-    $subfolder_destination = str_replace($source, $destination, $subfolder_source);
+    $subfolder_destination = $destination . str_replace($source, '', $subfolder_source);
     // Already takes care of multiple stream wrappers.
     $batch['operations'] = array_merge($batch['operations'], media_browser_plus_move_subfolder($subfolder, $subfolder_source, $subfolder_destination));
   }
@@ -212,10 +212,24 @@ function media_browser_plus_move_physical_folder($source, $destination) {
   $files = @scandir($source);
   if ($files && count($files) > 2) {
     $transfer = new FileTransferLocal($jail);
-    // Only use the parent path as the copy action will create the folder.
-    $copy_destination = drupal_dirname($destination);
-    $transfer->copyDirectory($source, $copy_destination);
     clearstatcache();
+    // We need to copy the children first and later handle the source folder
+    // since this is how FileTransferLocal works.
+    foreach ($files as $file) {
+      if (!in_array($file, array('.', '..'))) {
+        $source_path = $source . DIRECTORY_SEPARATOR . $file;
+        $copy_destination =  $destination . DIRECTORY_SEPARATOR . $file;
+        if (is_file($source_path)) {
+          $transfer->copyFile($source_path, $copy_destination);
+          $transfer->removeFile($source_path);
+        }
+        else {
+          $transfer->copyDirectory($source_path, $copy_destination);
+          $transfer->removeDirectory($source_path);
+        }
+      }
+    }
+    // All stuff is moved to destination, delete the source now.
     $transfer->removeDirectory($source);
   }
   else {
