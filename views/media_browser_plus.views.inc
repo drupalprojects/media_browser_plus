@@ -118,6 +118,10 @@ function template_preprocess_media_browser_plus_views_view_media_browser(&$vars)
       $fids[$index] = $result->fid;
     }
     $files = file_load_multiple($fids);
+    foreach ($files as $file) {
+      // Add url/preview to the file object.
+      media_browser_build_media_item($file);
+    }
 
     // Add the files to JS so that they are accessible inside the browser.
     drupal_add_js(array('media' => array('files' => array_values($files))), 'setting');
