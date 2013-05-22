@@ -505,7 +505,7 @@ function media_browser_plus_taxonomy_term_presave($term) {
     // Actions if this is an existing term.
     if (!empty($term->tid)) {
       // Store current path the check later if the folder was moved.
-      $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term);
+      $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term->original);
     }
   }
 }
