@@ -50,7 +50,7 @@ function media_browser_plus_enable() {
   switch (TRUE) {
     // 23. April 2013 http://drupal.org/node/1977728
     case function_exists('file_type_load_all'):
-      $file_types = file_type_load_all();
+      $file_types = array_keys(file_type_load_all());
       break;
 
     // Old.
