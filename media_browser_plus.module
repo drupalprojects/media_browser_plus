@@ -55,7 +55,7 @@ function media_browser_plus_menu() {
       'title' => 'Delete multiple files',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('file_entity_multiple_delete_confirm', 4),
-      'access callback' => 'media_browser_plus_file_entity_access',
+      'access callback' => 'media_browser_plus_file_entity_access_wrapper',
       'access arguments' => array('delete', 4),
       'file' => 'file_entity.admin.inc',
       'file path' => drupal_get_path('module', 'file_entity'),
@@ -67,7 +67,7 @@ function media_browser_plus_menu() {
       'title' => 'Download multiple files',
       'page callback' => 'media_browser_plus_download_multiple_files',
       'page arguments' => array(4),
-      'access callback' => 'media_browser_plus_file_entity_access',
+      'access callback' => 'media_browser_plus_file_entity_access_wrapper',
       'access arguments' => array('view', 4),
       'file' => 'file_entity.admin.inc',
       'file path' => drupal_get_path('module', 'file_entity'),
@@ -201,7 +201,7 @@ function media_browser_plus_download_action_form($context, $form_state) {
 
   $files = file_load_multiple($selection);
   // Check permissions. If one fails - stop whole operation!
-  if (!media_browser_plus_file_entity_access('view', $files)) {
+  if (!media_browser_plus_file_entity_access_wrapper('view', $files)) {
     drupal_access_denied();
     drupal_exit();
   }
@@ -321,7 +321,7 @@ function media_browser_plus_access($op) {
 /**
  * Wrapper around file_entity_access() to deal with multiple files.
  */
-function media_browser_plus_file_entity_access($op, $files = NULL, $account = NULL) {
+function media_browser_plus_file_entity_access_wrapper($op, $files = NULL, $account = NULL) {
   // If there's files parameter, ensure it is an array to handle.
   if (!is_array($files) && !empty($files)) {
     $files = array($files);
@@ -441,17 +441,22 @@ function media_browser_plus_construct_dir_path($term = NULL) {
  *   The file object.
  * @param int $replace
  *   Replace behavior when the destination file already exists.
+ * @param bool $save
+ *   Enables or disables saving the file object. Handy for cases in which the
+ *   file object is saved anyway.
  *
  * @return bool
  *   TRUE on success.
  */
-function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME) {
+function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME, $save = TRUE) {
   $local_stream_wrappers = media_get_local_stream_wrappers();
   $scheme = file_uri_scheme($file->uri);
 
   // Don't change the uri for non-local files.
   if (!isset($local_stream_wrappers[$scheme])) {
-    file_save($file);
+    if ($save) {
+      file_save($file);
+    }
   }
   else {
     // Media translation module does need this since it allows the creation of
@@ -465,7 +470,16 @@ function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME
     $folder = taxonomy_term_load($tid);
     $path = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . media_browser_plus_construct_dir_path($folder));
     file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-    return file_move($file, $path, $replace);
+    if ($save) {
+      return file_move($file, $path, $replace);
+    }
+    else {
+      if ($uri = file_unmanaged_move($file->uri, $path, $replace)) {
+        $file->uri = $uri;
+        return TRUE;
+      }
+      return FALSE;
+    }
   }
   return TRUE;
 }
