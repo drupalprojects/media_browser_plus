@@ -354,4 +354,74 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
     // Just to have a verbose output.
     $this->drupalGet('admin/structure/taxonomy/media_folders');
   }
+
+
+  /**
+   * Test the ability to delete folders.
+   */
+  public function testFileMovement() {
+    $this->drupalLogin($this->adminUser);
+
+    $root_folder = media_browser_plus_get_media_root_folder();
+    // Create test folder structure.
+    $folders = array(
+      'root_folder' => $root_folder->name,
+      'source' => $this->randomName(),
+      'source_child' => $this->randomName(),
+    );
+    $hierarchy = array(
+      'root_folder' => array(
+        $folders['source'] => array(
+          $folders['source_child'] => array(),
+        ),
+      ),
+    );
+    $this->folderCreationHelper($hierarchy, FALSE);
+    $target_folders = array(
+      'root_folder' => 'source',
+      'source' => 'source_child',
+      'source_child' => 'root_folder',
+    );
+
+    // Create test files.
+    $files = array();
+    $folder_paths = array();
+    foreach ($folders as $type => $folder_name) {
+      $terms = taxonomy_get_term_by_name($folder_name);
+      $folder = reset($terms);
+      $folder_paths[$type] = media_browser_plus_construct_dir_path($folder);
+      foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+        $files[$scheme][$type][] = $this->createTestFile('text/plain', $folder, $scheme);
+        $files[$scheme][$type][] = $this->createTestFile('image/jpg', $folder, $scheme);
+      }
+    }
+    // Just to have a verbose output.
+    $this->drupalGet('admin/content/file/list');
+
+    // Set a new folder for the files and check if they moved accordingly.
+    $moved_files = array();
+    foreach ($files as $scheme => $source_files) {
+      foreach ($source_files as $folder => $folder_files) {
+        $target_folder = $target_folders[$folder];
+        $terms = taxonomy_get_term_by_name($folders[$target_folder]);
+        $target_folder = reset($terms);
+        $path = $scheme . '://' . media_browser_plus_construct_dir_path($target_folder);
+        foreach ($folder_files as $folder_file) {
+          $folder_file->field_folder[LANGUAGE_NONE][0]['tid'] = $target_folder->tid;
+          $source_uri = $folder_file->uri;
+          file_save($folder_file);
+
+          $files = entity_load('file', array($folder_file->fid), array(), TRUE);
+          $folder_file = reset($files);
+          $this->assertNotEqual($source_uri, $folder_file->uri, 'File uri changed');
+          $expected_uri = file_stream_wrapper_uri_normalize($path . '/' . basename($folder_file->uri));
+          $this->assertEqual($folder_file->uri, $expected_uri);
+          clearstatcache();
+          $this->assertTrue(file_exists(drupal_realpath($expected_uri)), 'File properly moved');
+        }
+      }
+    }
+
+
+  }
 }

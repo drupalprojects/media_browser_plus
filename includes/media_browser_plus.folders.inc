@@ -29,6 +29,7 @@ function media_browser_plus_move_root_folder($source, $destination) {
     $directory = file_stream_wrapper_uri_normalize($scheme . '://' . $destination);
     file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   }
+  variable_set('media_root_folder', trim($destination, '/'));
 
   // Move media files in root folder itself. We do this because if the root
   // folder was located in the default file directory of Drupal we can't move
@@ -53,10 +54,7 @@ function media_browser_plus_move_root_folder($source, $destination) {
   );
 
   // Set the media root folder variable to the new destination.
-  $batch['operations'][] = array(
-    'variable_set',
-    array('media_root_folder', trim($destination, '/')),
-  );
+  $batch['operations'] = array();
 
   // Move subfolders.
   $root_subfolders = taxonomy_get_children($root_folder_term->tid);
@@ -234,7 +232,9 @@ function media_browser_plus_move_physical_folder($source, $destination) {
   }
   else {
     // The folder is empty so just delete and create the new one.
-    drupal_rmdir($source);
+    if (file_exists($source)) {
+      drupal_rmdir($source);
+    }
     file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
   }
   return TRUE;
