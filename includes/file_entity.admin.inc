@@ -101,7 +101,7 @@ function media_browser_plus_edit_multiple_redirect($form, &$form_state) {
   }
   $form_state['redirect'] = array(
     'admin/content/file/edit_multiple/' . $fids,
-    array('query' => array('destination' => 'admin/content/file/thumbnails?folder=' . $folder)),
+    array('query' => array('destination' => $_GET['q'] . '?folder=' . $folder)),
   );
 }
 

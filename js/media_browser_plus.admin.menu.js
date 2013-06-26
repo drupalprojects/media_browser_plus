@@ -6,10 +6,13 @@
         $('#media-admin').prepend('<div><ul class="action-links"></ul></div>');
       }
       var $filterLink = "";
-      if(Drupal.settings.media_browser_plus.filter_active && Drupal.settings.media_browser_plus.filter_allowed)
-        $filterLink = $('<a id="media-filter-launch" href="' + Drupal.settings.media_browser_plus.url + '?q=admin/content/file/filter"></a>').html('Change <b>(active)</b> Filter');
-      else
-        $filterLink = $('<a id="media-filter-launch" href="' + Drupal.settings.media_browser_plus.url + '?q=admin/content/file/filter"></a>').html('Apply Filter');
+      if(Drupal.settings.media_browser_plus.filter_allowed) {
+        if (Drupal.settings.media_browser_plus.filter_active) {
+          $filterLink = $('<a id="media-filter-launch" href="' + Drupal.settings.media_browser_plus.url + '?q=admin/content/file/filter"></a>').html('Change <b>(active)</b> Filter');
+        } else {
+          $filterLink = $('<a id="media-filter-launch" href="' + Drupal.settings.media_browser_plus.url + '?q=admin/content/file/filter"></a>').html('Apply Filter');
+        }
+      }
       $('ul.action-links', context).append($('<li></li>').append($filterLink));
       if(Drupal.settings.media_browser_plus.manage_folders) {
         var $foldersLink = $('<a href="' + Drupal.settings.media_browser_plus.folder_management_url + '"></a>').html('Folder Management');

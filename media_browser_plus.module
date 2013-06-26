@@ -430,6 +430,14 @@ function media_browser_plus_submit($form, &$form_state) {
     media_browser_plus_move_file($form_state['values']['field_folder'], $media);
   }
 
+  if (!empty($form_state['redirect']) && is_string($form_state['redirect']) && mb_strpos($form_state['redirect'], 'file/', 0, 'UTF-8') === 0) {
+    // Path was set to file/%file, but we need to thoroughly check if we have
+    // access to "admin/content/file", using a failsafe approach.
+    $item = menu_get_item('admin/content/file');
+    if ($item['access']) {
+      $form_state['redirect'] = 'admin/content/file';
+    }
+  }
 }
 
 /**
@@ -621,7 +629,7 @@ function media_browser_plus_menu() {
     'page arguments' => array('media_browser_plus_change_folder'),
     'type' => MENU_CALLBACK,
     'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('edit file'),
+    'access arguments' => array('edit media files'),
   );
   $items['admin/content/file/filter'] = array(
     'title' => 'Media Filter',
@@ -638,7 +646,7 @@ function media_browser_plus_menu() {
     'page callback' => 'media_browser_plus_thumbnailsJSON',
     'page arguments' => array(),
     'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('view file'),
+    'access arguments' => array('view files'),
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/media/media_browser_plus_settings'] = array(
@@ -654,7 +662,7 @@ function media_browser_plus_menu() {
     'page arguments' => array(4),
     'file' => 'includes/media_browser_plus.pages.inc',
     'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('preview media'),
+    'access arguments' => array('edit media files'),
   );
   $items['admin/content/file/delete_multiple/%'] = array(
     'title' => 'Delete Media Items',
@@ -662,7 +670,7 @@ function media_browser_plus_menu() {
     'page arguments' => array('media_browser_plus_delete_multiple_form', 4),
     'file' => 'includes/media_browser_plus.pages.inc',
     'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('edit file'),
+    'access arguments' => array('edit media files'),
   );
   // Folder management disabled until menu bug has been fixed.
   $items['admin/content/file/folder_list'] = array(
@@ -722,10 +730,12 @@ function media_browser_plus_menu() {
 function media_browser_plus_menu_alter(&$items) {
   $items['admin/content/file']['access callback'] = 'media_browser_plus_access';
   $items['admin/content/file']['access arguments'] = array('access media backend');
-  $items['admin/content/file/thumbnails']['access arguments'] = array('access media backend');
   $items['admin/content/file/thumbnails']['access callback'] = array('media_browser_plus_access');
+  $items['admin/content/file/thumbnails']['access arguments'] = array('media grid view');
 
   if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE)) {
+    $items['admin/content/file/list']['access callback'] = 'media_browser_plus_access';
+    $items['admin/content/file/list']['access arguments'] = array('media list view');
     $items['admin/content/file/list'] += $items['admin/content/file/thumbnails'];
     $items['admin/content/file/list']['type'] = MENU_LOCAL_TASK | MENU_NORMAL_ITEM;
     $items['admin/content/file/thumbnails']['type'] = MENU_DEFAULT_LOCAL_TASK;
@@ -753,7 +763,7 @@ function media_browser_plus_permission() {
       'title' => t('Upload media'),
       'description' => t('Allow user to add media.'),
     ),
-    'download files' => array(
+    'download media files' => array(
       'title' => t('Download Files'),
       'description' => t('Allows the user to download the original file items.'),
     ),
@@ -770,6 +780,11 @@ function media_browser_plus_permission() {
       'title' => t('Preview media'),
       // @TODO better description
       'description' => t('Allows the user to view a configurable preview of the original media item.'),
+    ),
+    'edit media files' => array(
+      'title' => t('Edit media files'),
+      // @TODO better description
+      'description' => t('Allows the user to edit the original media item.'),
     ),
   );
 }
@@ -1522,9 +1537,9 @@ function _media_browser_plus_folder_empty($folder_id) {
  *
  * @param string $tags
  *   Comma separated string of the tags.
- * @param boolean $tids_only
+ * @param bool $tids_only
  *   Return the term ids instead term entities.
- * @param boolean $auto_create
+ * @param bool $auto_create
  *   Create missing tags on the fly.
  *
  * @return array
@@ -1604,9 +1619,6 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
 
 /**
  * Implements hook_media_browser_plugin_info().
- *
- * @return array
- *   List if plugins.
  */
 function media_browser_plus_media_browser_plugin_info() {
   $plugins = array();
@@ -1620,7 +1632,7 @@ function media_browser_plus_media_browser_plugin_info() {
       'class' => 'MediaBrowserPlusLibrary',
     ),
     'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('view file'),
+    'access arguments' => array('view files'),
   );
   return $plugins;
 }
@@ -1632,10 +1644,13 @@ function media_browser_plus_media_browser_plugin_info() {
  *   The form structure.
  * @param array $form_state
  *   The form state.
- * @param boolean $multiselect
+ * @param bool $multiselect
  *   Allow multiple selection.
  * @param array $types
  *   The allowed file types.
+ *
+ * @return array
+ *   The form extended with the necessary library stuff.
  */
 function media_browser_plus_library_browser($form, &$form_state, $multiselect, $types) {
   $path = drupal_get_path('module', 'media_browser_plus');
@@ -1732,7 +1747,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
     '<a href="#media_folder_table" id="media_main_view_deselect_all" >' . t('Deselect All') . '</a>',
   );
   if (!$library_mode) {
-    if (media_browser_plus_access('view file')) {
+    if (media_browser_plus_access('view files')) {
       $form['buttons']['view_media'] = array(
         '#type' => 'button',
         '#attributes' => array('id' => 'media_buttons_view'),
@@ -1746,7 +1761,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
         '#value' => t('Preview'),
       );
     }
-    if (media_browser_plus_access('edit file')) {
+    if (media_browser_plus_access('edit media files')) {
       $form['buttons']['edit_media'] = array(
         '#type' => 'submit',
         '#attributes' => array('id' => 'media_buttons_edit'),
@@ -1755,7 +1770,7 @@ function media_browser_plus_grid_view_form($library_mode = FALSE, $multiselect =
         '#value' => t('Edit'),
       );
     }
-    if (media_browser_plus_access('edit file')) {
+    if (media_browser_plus_access('edit media files')) {
       // edit-submit
       $form['buttons']['delete_media'] = array(
         '#type' => 'submit',
@@ -1849,8 +1864,8 @@ function media_browser_plus_main_view_javascript_settings() {
         'only_one_selection_allowed' => t('Only one media item may be selected'),
       ),
   // Access settings.
-      'folder_dnd_enabled' => media_browser_plus_access('edit file'),
-      'manage_folders' => media_browser_plus_access('edit folders'),
+      'folder_dnd_enabled' => media_browser_plus_access('edit media files'),
+      'manage_folders' => media_browser_plus_access('administer media folders'),
       'filter_allowed' => media_browser_plus_access('filter media'),
       'add_files' => media_browser_plus_access('upload media'),
     ),
@@ -1875,7 +1890,7 @@ function media_browser_plus_media_basket_form($library_mode = FALSE, &$form_stat
     $form['basket_actions']['select'] = _media_browser_plus_media_basket_select_button();
   }
   else {
-    if (media_browser_plus_access('download media')) {
+    if (media_browser_plus_access('download media files')) {
       $form['basket_actions']['download'] = array(
         '#type' => 'submit',
         '#value' => t('Download'),
@@ -2053,11 +2068,11 @@ function media_browser_plus_move_physical_folder($source, $destination) {
  * Every media file that is saved or updated,should pass through this to make
  * sure the filesystem location is the same with the folder term.
  *
- * @param integer $tid
+ * @param int $tid
  *   The folder's term id.
  * @param object $media
  *   The media object.
- * @param integer $replace
+ * @param int $replace
  *   Replace behavior when the destination file already exists.
  */
 function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAME) {
@@ -2083,7 +2098,7 @@ function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAM
 /**
  * Implements hook_taxonomy_term_presave().
  *
- * @see media_browser_plus_taxonomy_term_update().
+ * @see media_browser_plus_taxonomy_term_update()
  */
 function media_browser_plus_taxonomy_term_presave($term) {
   // Figure out if this is a folder term and if so store the current file path
