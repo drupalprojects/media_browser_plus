@@ -544,6 +544,9 @@ function media_browser_plus_taxonomy_term_insert($term) {
     else {
       drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
     }
+
+    // Clear view cache for media browser plus folders.
+    media_browser_plus_clear_views_cache('media_browser_plus_folders');
   }
 }
 
@@ -553,22 +556,28 @@ function media_browser_plus_taxonomy_term_insert($term) {
  * @see media_browser_plus_taxonomy_term_presave()
  */
 function media_browser_plus_taxonomy_term_update($term) {
-  // Check if the folder term was moved. Only folder terms have this property.
-  if (!empty($term->media_browser_plus_original_path)) {
-    $destination = media_browser_plus_construct_dir_path($term);
-    if ($term->media_browser_plus_original_path != $destination) {
-      module_load_include('inc', 'media_browser_plus', '/includes/media_browser_plus.folders');
-      // Prepare batch to move folder and files.
-      $batch = array(
-        'title' => t('Updating file locations'),
-        'operations' => media_browser_plus_move_subfolder($term, $term->media_browser_plus_original_path, $destination),
-        'file' => drupal_get_path('module', 'media_browser_plus') . '/includes/media_browser_plus.folders.inc',
-      );
-      // If necessary start the batch to update the folder structure.
-      if (!empty($batch['operations'])) {
-        batch_set($batch);
+
+  if ($term->vocabulary_machine_name == 'media_folders') {
+    // Check if the folder term was moved. Only folder terms have this property.
+    if (!empty($term->media_browser_plus_original_path)) {
+      $destination = media_browser_plus_construct_dir_path($term);
+      if ($term->media_browser_plus_original_path != $destination) {
+        module_load_include('inc', 'media_browser_plus', '/includes/media_browser_plus.folders');
+        // Prepare batch to move folder and files.
+        $batch = array(
+          'title' => t('Updating file locations'),
+          'operations' => media_browser_plus_move_subfolder($term, $term->media_browser_plus_original_path, $destination),
+          'file' => drupal_get_path('module', 'media_browser_plus') . '/includes/media_browser_plus.folders.inc',
+        );
+        // If necessary start the batch to update the folder structure.
+        if (!empty($batch['operations'])) {
+          batch_set($batch);
+        }
       }
     }
+
+    // Clear view cache for media browser plus folders.
+    media_browser_plus_clear_views_cache('media_browser_plus_folders');
   }
 }
 
@@ -639,6 +648,9 @@ function media_browser_plus_taxonomy_term_delete($term) {
       }
       drupal_set_message(t("Some of the files in the folder are used and can't be deleted:") . theme('item_list', $list), 'error');
     }
+
+    // Clear view cache for media browser plus folders.
+    media_browser_plus_clear_views_cache('media_browser_plus_folders');
   }
 }
 
@@ -789,5 +801,36 @@ function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_sta
     // Nothing to do for now.
     case 2:
     case 3:
+  }
+}
+
+/**
+ * Clears the cache for a specific view.
+ *
+ * This method is copied from the cache_actions module.
+ *
+ * @param string $view_name
+ *   The name of the view to clear the cache.
+ */
+function media_browser_plus_clear_views_cache($view_name) {
+
+  $view = views_get_view($view_name);
+
+  if (is_object($view)) {
+    // Go through all displays and clear the cache.
+    foreach ($view->display as $display) {
+
+      // If we don't have our own cache plugin, then we need to copy the cache
+      // settings from default.
+      if (!isset($display->display_options['cache']) && isset($view->display['default'])) {
+        $display->display_options['cache'] = $view->display['default']->display_options['cache'];
+      }
+      $cache_plugin = views_get_plugin('cache', $display->display_options['cache']['type']);
+      // If we have a cache plugin, then initiate it and flush the cache.
+      if (isset($cache_plugin)) {
+        $cache_plugin->init($view, $display);
+        $cache_plugin->cache_flush();
+      }
+    }
   }
 }
