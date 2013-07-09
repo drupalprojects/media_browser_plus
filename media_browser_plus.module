@@ -419,9 +419,15 @@ function media_browser_plus_construct_dir_path($term = NULL) {
     if (is_array($parents) && !empty($parents)) {
       foreach ($parents as $parent) {
         if ($parent->tid != $root_folder_term->tid) {
+          if (function_exists('transliteration_clean_filename')) {
+            $parent->name = transliteration_clean_filename($parent->name);
+          }
           $path = file_create_filename($parent->name, $path);
         }
       }
+    }
+    if (function_exists('transliteration_clean_filename')) {
+      $term->name = transliteration_clean_filename($term->name);
     }
     $path = file_create_filename($term->name, $path);
   }
@@ -451,6 +457,10 @@ function media_browser_plus_construct_dir_path($term = NULL) {
 function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME, $save = TRUE) {
   $local_stream_wrappers = media_get_local_stream_wrappers();
   $scheme = file_uri_scheme($file->uri);
+
+  if (function_exists('transliteration_clean_filename')) {
+    $file->filename = transliteration_clean_filename($file->filename);
+  }
 
   // Don't change the uri for non-local files.
   if (!isset($local_stream_wrappers[$scheme])) {
