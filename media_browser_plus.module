@@ -376,6 +376,9 @@ function media_browser_plus_submit($form, &$form_state) {
     // spread.
     $fids = $form_state['redirect'][1]['query']['fid'];
   }
+  elseif (isset($form_state['storage']['upload'])) {
+    $fids = $form_state['storage']['upload'];
+  }
 
   if (!is_array($fids)) {
     $fids = array($fids);
