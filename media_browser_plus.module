@@ -829,6 +829,8 @@ function media_browser_plus_clear_views_cache($view_name) {
   if (is_object($view)) {
     // Go through all displays and clear the cache.
     foreach ($view->display as $display) {
+      // Set display handler.
+      $view->set_display($display->id);
 
       // If we don't have our own cache plugin, then we need to copy the cache
       // settings from default.
