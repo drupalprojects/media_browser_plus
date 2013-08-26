@@ -1143,8 +1143,15 @@ function media_browser_plus_load_multiple($variables) {
       }
     }
   }
+
+  // Another backward compatibility check.
+  $hidden_stream_wrapper_function = 'media_get_hidden_stream_wrappers';
+  if (function_exists('file_entity_get_hidden_stream_wrappers')) {
+    $hidden_stream_wrapper_function = 'file_entity_get_hidden_stream_wrappers';
+  }
+
   // Do not list temporary files.
-  foreach (array_keys(media_get_hidden_stream_wrappers()) as $name) {
+  foreach (array_keys(call_user_func($hidden_stream_wrapper_function)) as $name) {
     $params['conditions'][] = array(
       'property' => array('uri', $name . '%', 'NOT LIKE'),
     );
