@@ -633,6 +633,7 @@ function media_browser_plus_menu() {
     'type' => MENU_CALLBACK,
     'access callback' => 'media_browser_plus_access',
     'access arguments' => array('edit media files'),
+    'file' => 'media_browser_plus.module',
   );
   $items['admin/content/file/filter'] = array(
     'title' => 'Media Filter',
@@ -651,6 +652,7 @@ function media_browser_plus_menu() {
     'access callback' => 'media_browser_plus_access',
     'access arguments' => array('view files'),
     'type' => MENU_CALLBACK,
+    'file' => 'media_browser_plus.module',
   );
   $items['admin/config/media/media_browser_plus_settings'] = array(
     'title' => 'Media Browser Plus Settings',
