@@ -29,6 +29,7 @@
   margin: 2px 2px 2px 0px;
   margin-top: 4px;
   width: 98%;
+  white-space: nowrap;
 }
 
 #folder ul {
@@ -263,7 +264,7 @@ ul#navlist {
 }
 
 .mbp-item-list .media-list-thumbnails .media-item {
-  padding: 16px 16px 4px 16px;
+  padding: 6px 6px 2px;
 }
 
 .mbp-item-list .media-list-thumbnails .form-type-checkbox {
@@ -280,7 +281,7 @@ ul#navlist {
 .mbp-item-list .media-item {
   background: #FFF;
   border: 1px solid #CCCCCC;
-  margin: 10px;
+  margin: 5px;
   padding: 6px 6px 2px;
   width: 100px;
 }
@@ -312,20 +313,29 @@ ul#navlist {
   float:left;
 }
 
-.mbp-item-list .media-item .label-wrapper {
-  overflow: hidden;
-  margin-left: 14px;
+.mbp-item-list .media-item .label-wrapper:hover {
+  z-index: 10;
 }
 
-.mbp-item-list .media-item .label-wrapper:hover {
-  border-bottom: 2px solid #CCC;
-  border-right: 2px solid #CCC;
+.mbp-item-list .media-item .media-filename {
+  white-space: nowrap;
+  background-color: #FFFFFF;
+  border: 1px solid transparent;
+}
+
+.mbp-item-list .media-item .label-wrapper:hover .media-filename {
   display: inline-block;
-  line-height: 16px;
-  margin-bottom: -1px;
   overflow: visible;
-  position: relative;
-  z-index: 10;
+  padding-right: 5px;
+  border: 1px solid #CCCCCC;
+}
+
+.mbp-item-list .media-item.selected .media-filename {
+  background: #F4ECC7;
+}
+
+.mbp-item-list .media-item .media-thumbnail a {
+  display: none;
 }
 
 .mbp-item-list .preview .media-item .label-wrapper {
@@ -335,30 +345,4 @@ ul#navlist {
 .preview {
   display: inline-block;
   vertical-align: middle;
-}
-
-.mbp-item-list .media-item .media-filename {
-  background: #FFF;
-  color: #058AC5;
-  font-size: 10px;
-  padding: 0 3px;
-  white-space: nowrap;
-}
-
-.mbp-item-list .media-item .label-wrapper:hover .media-filename {
-  border: 1px solid #888;
-  display: inline-block;
-  margin: 0 0 -2px -1px;
-}
-
-.mbp-item-list .media-item.selected .media-filename {
-  background: #F4ECC7;
-}
-
-.mbp-item-list .media-item .media-filename:hover {
-  text-decoration: underline;
-}
-
-.mbp-item-list .media-item .media-thumbnail a {
-  display: none;
 }
