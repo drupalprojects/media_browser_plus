@@ -219,9 +219,8 @@
       $item.addClass('selected');
       // Remove old pictures.
       $("#media-thumb-list > li").remove();
-      var loading = '<li id="loading_media"><img src="'+Drupal.settings.media_browser_plus.images_url+'loading.gif" /><li>';
-      $loading = $(loading);
-      $loading.appendTo('#media-thumb-list');
+      var loading = '<li id="loading_media"><img src="'+Drupal.settings.media_browser_plus.images_url+'loading.gif" /></li>';
+      $(loading).appendTo('#media-thumb-list');
       // @TODO: add some kind of loading UI and failure handling here
       // and load in new ones
       $filter = Drupal.settings.media_browser_plus.filter;
