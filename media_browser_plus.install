@@ -97,7 +97,7 @@ function media_browser_plus_requirements($phase) {
     $result = db_query("SELECT * FROM {system} WHERE name = 'media_bulk_upload' and type = 'module'")->rowCount();
     if ($result) {
       $requirements['mbp_media_bulk_upload'] = array(
-        'title' => $t('Module Media Bulk Upload enabled'),
+        'title' => $t('Media Browser Plus: Media Bulk Upload enabled'),
         'value' => $t('Media Browser Plus needs Media Bulk Upload to work properly.'),
         'severity' => REQUIREMENT_OK,
       );
@@ -108,6 +108,16 @@ function media_browser_plus_requirements($phase) {
           array('!module_admin_link' => l($t('module administration'), 'admin/modules'))
         );
       }
+    }
+
+    $requirements['mbp_archiver'] = array(
+      'title' => $t('Media Browser Plus: Archiver found'),
+      'value' => $t('Media Browser Plus needs an archiver to provide multifile downloads.'),
+      'severity' => REQUIREMENT_OK,
+    );
+    if (!count(archiver_get_info())) {
+      $requirements['mbp_archiver']['severity'] = REQUIREMENT_WARNING;
+      $requirements['mbp_archiver']['value'] .= l($t('(further information)'), 'https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_archiver_info/7');
     }
   }
   return $requirements;
