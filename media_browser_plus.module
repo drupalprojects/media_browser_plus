@@ -511,7 +511,7 @@ function media_browser_plus_taxonomy_term_presave($term) {
       $parent = reset($term->parent);
     }
     // A subfolder term is always child of the root folder.
-    if (empty($parent)) {
+    if (!isset($parent)) {
       // Condition is necessary to ensure we don't interfere while installing
       // the module.
       if ($root_folder = media_browser_plus_get_media_root_folder()) {
