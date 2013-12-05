@@ -85,6 +85,35 @@ function media_browser_plus_uninstall() {
 }
 
 /**
+ * Implements of hook_requirements().
+ */
+function media_browser_plus_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break during installation.
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    // Check if we've to rely on and if it's enabled.
+    $result = db_query("SELECT * FROM {system} WHERE name = 'media_bulk_upload' and type = 'module'")->rowCount();
+    if ($result) {
+      $requirements['mbp_media_bulk_upload'] = array(
+        'title' => $t('Module Media Bulk Upload enabled'),
+        'value' => $t('Media Browser Plus needs Media Bulk Upload to work properly.'),
+        'severity' => REQUIREMENT_OK,
+      );
+      if (!module_exists('media_bulk_upload')) {
+        $requirements['mbp_media_bulk_upload']['severity'] = REQUIREMENT_WARNING;
+        $requirements['mbp_media_bulk_upload']['value'] .= $t(
+          ' (Enable the module in the !module_admin_link)',
+          array('!module_admin_link' => l($t('module administration'), 'admin/modules'))
+        );
+      }
+    }
+  }
+  return $requirements;
+}
+
+/**
  * Update from 2.x to 3.x branch.
  */
 function media_browser_plus_update_7300() {
