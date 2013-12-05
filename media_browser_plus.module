@@ -55,7 +55,12 @@ function media_browser_plus_menu() {
   }
   // If there's an archiver available provide the multi download.
   if (count(archiver_get_info())) {
-    $items['admin/content/file/download-multiple/%media_multi'] = array(
+    // @TODO Version compatibility cleanup.
+    $callback_function = '%media_multi';
+    if (module_exists('media_bulk_upload')) {
+      $callback_function = '%media_bulk_upload_multi';
+    }
+    $items['admin/content/file/download-multiple/' . $callback_function] = array(
       'title' => 'Download multiple files',
       'page callback' => 'media_browser_plus_download_multiple_files',
       'page arguments' => array(4),
