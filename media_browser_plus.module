@@ -20,14 +20,6 @@ function media_browser_plus_views_api() {
  */
 function media_browser_plus_menu() {
   $path = drupal_get_path('module', 'media_browser_plus');
-  $items['admin/content/file/thumbnailsJSON'] = array(
-    'title' => 'Load Media Entities',
-    'page callback' => 'media_browser_plus_thumbnailsJSON',
-    'page arguments' => array(),
-    'access callback' => 'media_browser_plus_access',
-    'access arguments' => array('view file'),
-    'type' => MENU_CALLBACK,
-  );
   $items['admin/content/file/%file/move-to-folder/%taxonomy_term'] = array(
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_move_file_callback',
