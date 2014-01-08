@@ -435,7 +435,7 @@ function media_browser_plus_construct_dir_path($term = NULL) {
 /**
  * Moves and saves a file.
  *
- * Every managed file that is saved or updated,should pass through this to
+ * Every managed file that is saved or updated, should pass through this to
  * ensure the filesystem location matches the folder term.
  *
  * @param int $tid
@@ -452,6 +452,11 @@ function media_browser_plus_construct_dir_path($term = NULL) {
  *   TRUE on success.
  */
 function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME, $save = TRUE) {
+  // No need to process the file if its location is not managed.
+  if (!variable_get('media_browser_plus_filesystem_folders', TRUE)) {
+    return TRUE;
+  }
+
   $local_stream_wrappers = media_get_local_stream_wrappers();
   $scheme = file_uri_scheme($file->uri);
 
