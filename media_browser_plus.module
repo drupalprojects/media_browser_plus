@@ -2102,8 +2102,10 @@ function media_browser_plus_move_file($tid, $media, $replace = FILE_EXISTS_RENAM
     }
     $folder = media_browser_plus_folder_load($tid);
     $path = media_browser_plus_construct_dir_path($folder);
-    file_prepare_directory($path, FILE_CREATE_DIRECTORY);
-    file_move($media, $path, $replace);
+    if (dirname($media->uri) !== $path) {
+      file_prepare_directory($path, FILE_CREATE_DIRECTORY);
+      file_move($media, $path, $replace);
+    }
   }
 }
 
