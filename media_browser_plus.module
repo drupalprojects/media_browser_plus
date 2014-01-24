@@ -507,6 +507,7 @@ function media_browser_plus_taxonomy_term_presave($term) {
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
     $parent = NULL;
+    $root_folder = media_browser_plus_get_media_root_folder();
     // Check if parent handling is necessary.
     if (isset($term->parent)) {
       // Ensure we're dealing with an array.
@@ -520,13 +521,10 @@ function media_browser_plus_taxonomy_term_presave($term) {
       // Fetch the used parent.
       $parent = reset($term->parent);
     }
-    // A subfolder term is always child of the root folder.
-    if (!isset($parent)) {
-      // Condition is necessary to ensure we don't interfere while installing
-      // the module.
-      if ($root_folder = media_browser_plus_get_media_root_folder()) {
-        $term->parent = array($root_folder->tid);
-      }
+    // A subfolder term is always child of the root folder. Condition ensures
+    // we don't interfere while installing the module.
+    if ($root_folder && (!isset($parent) || (empty($parent) && $term->tid != $root_folder->tid))) {
+      $term->parent = array($root_folder->tid);
     }
     // Actions if this is an existing term.
     if (!empty($term->tid)) {
@@ -594,7 +592,36 @@ function media_browser_plus_taxonomy_term_update($term) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for taxonomy_form_term().
+ *
+ * @see media_browser_plus_form_taxonomy_term_confirm_delete_submit()
+ */
+function media_browser_plus_form_taxonomy_form_term_alter(&$form, &$form_state) {
+  // Just modify if this is is / contains the confirm delete form.
+  if (isset($form_state['confirm_delete'])) {
+    array_unshift($form['#submit'], 'media_browser_plus_form_taxonomy_term_confirm_delete_submit');
+  }
+}
+
+/**
+ * Submit handler for preparing for term deletion.
+ *
+ * Because hook_taxonomy_term_delete() is invoked after all data are removed
+ * from the db we fill the static cache so that it's still possible to build
+ * the necessary paths to clean the filesystem.
+ *
+ * @see media_browser_plus_taxonomy_term_delete()
+ */
+function media_browser_plus_form_taxonomy_term_confirm_delete_submit(&$form, &$form_state) {
+  // Fill the static caches needed to clean the filesystem.
+  taxonomy_get_parents($form_state['values']['tid']);
+  taxonomy_get_parents_all($form_state['values']['tid']);
+}
+
+/**
  * Implements hook_taxonomy_term_delete().
+ *
+ * @see media_browser_plus_form_taxonomy_term_confirm_delete_submit()
  */
 function media_browser_plus_taxonomy_term_delete($term) {
   static $term_hierarchy_filter;

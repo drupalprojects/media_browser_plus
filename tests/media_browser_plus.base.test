@@ -85,9 +85,9 @@ class MediaBrowserPlusTestBase extends DrupalWebTestCase {
         $folders = taxonomy_get_term_by_name($hierarchy);
         $folder = reset($folders);
         $parents = taxonomy_get_parents_all($folder->tid);
-        $parents = count($parents) - 2;
+        $parent_count = count($parents) - 2;
         $path = media_browser_plus_construct_dir_path($folder);
-        $this->assertEqual(substr_count($path, '/'), $parents, 'Folder hierarchy structure matches');
+        $this->assertEqual(substr_count($path, '/'), $parent_count, 'Folder hierarchy structure matches');
         foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
           $folder_path = file_stream_wrapper_uri_normalize($scheme . '://' . $path);
           $this->assertTrue(is_dir($folder_path), format_string('Folder found. (!path)', array('!path' => $folder_path)));

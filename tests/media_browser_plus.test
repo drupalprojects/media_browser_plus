@@ -31,6 +31,7 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
     // Just to have a verbose output.
     $this->drupalGet('admin/structure/taxonomy/media_folders');
 
+    // Create a normal folder structure.
     $hierarchy = array(
       'root_folder' => array(
         $this->randomName() => array(
@@ -40,13 +41,55 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
           $this->randomName() => array(),
         ),
       ),
-      $this->randomName() => array(
+    );
+    $this->folderCreationHelper($hierarchy);
+
+    // Just to have a verbose output.
+    $this->drupalGet('admin/structure/taxonomy/media_folders');
+  }
+
+  /**
+   * Test if invalid structures are automatically fixed.
+   */
+  public function testInvalidFolderCreation() {
+    $this->drupalLogin($this->adminUser);
+
+    // Ensure the link to the taxonomy management is available.
+    // Just to have a verbose output.
+    $this->drupalGet('admin/content/file/mbp');
+    $this->assertLinkByHref('admin/structure/taxonomy/media_folders', 0, 'Found link to folder taxonomy');
+
+    // Just to have a verbose output.
+    $this->drupalGet('admin/structure/taxonomy/media_folders');
+
+    // Create a normal folder structure.
+    $invalid_hierarchy_term = $this->randomName();
+    $hierarchy = array(
+      'root_folder' => array(
+        $this->randomName() => array(
+          $this->randomName() => array(),
+        ),
+        $this->randomName() => array(
+          $this->randomName() => array(),
+        ),
+      ),
+      $invalid_hierarchy_term => array(
         $this->randomName() => array(
           $this->randomName() => array(),
         ),
       ),
     );
-    $this->folderCreationHelper($hierarchy);
+    $this->folderCreationHelper($hierarchy, FALSE);
+
+    $root_folder_term = media_browser_plus_get_media_root_folder();
+    $folders = taxonomy_get_term_by_name($invalid_hierarchy_term);
+    $folder = reset($folders);
+    $parents = taxonomy_get_parents($folder->tid);
+    if ($this->assertEqual(count($parents), 1, 'Invalid intialized folder has a parent folder.')) {
+      $this->assertEqual($parents[$root_folder_term->tid]->tid, $root_folder_term->tid, 'Invalid intialized folder now belongs to the root folder.');
+    }
+    $path = media_browser_plus_construct_dir_path($folder);
+    $this->assertEqual($path, $invalid_hierarchy_term, 'Path for folder matches.');
 
     // Just to have a verbose output.
     $this->drupalGet('admin/structure/taxonomy/media_folders');
@@ -190,6 +233,56 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
     foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
       $directory = file_stream_wrapper_uri_normalize($scheme . '://' . $folder_path);
       $this->assertFalse(file_exists($directory), 'Folder and all children deleted');
+    }
+
+    // Just to have a verbose output.
+    $this->drupalGet('admin/structure/taxonomy/media_folders');
+  }
+
+  /**
+   * Test the ability to delete sub-folders.
+   *
+   * Introduced due https://drupal.org/node/2176317
+   * @link https://drupal.org/node/2176317
+   *
+   * At the moment writing this test hook_taxonomy_term_delete() is invoked
+   * after all data are removed from the db. However, there are static caches in
+   * effect that still allow to build the necessary paths to clean up the
+   * filesystem. Unfortunately this is only true for terms that have children.
+   * media_browser_plus_form_taxonomy_term_confirm_delete_submit() fixes that.
+   *
+   * @see media_browser_plus_form_taxonomy_term_confirm_delete_submit()
+   */
+  public function testSubFolderDeletion() {
+    $this->drupalLogin($this->adminUser);
+
+    // Create test folder structure.
+    $folders = array(
+      'source' => $this->randomName(),
+      'source_child' => $this->randomName(),
+      'source_child_child' => $this->randomName(),
+    );
+    $hierarchy = array(
+      'root_folder' => array(
+        $folders['source'] => array(
+          $folders['source_child'] => array(
+            $folders['source_child_child'] => array(),
+          ),
+        ),
+      ),
+    );
+    $this->folderCreationHelper($hierarchy, FALSE);
+
+    $folders = taxonomy_get_term_by_name($folders['source_child_child']);
+    $folder = reset($folders);
+    $folder_path = media_browser_plus_construct_dir_path($folder);
+
+    // Delete the folder.
+    $this->drupalPost('taxonomy/term/' . $folder->tid . '/edit', array(), t('Delete'));
+    $this->drupalPost(NULL, array(), t('Delete'));
+    foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+      $directory = file_stream_wrapper_uri_normalize($scheme . '://' . $folder_path);
+      $this->assertFalse(file_exists($directory), 'Folder deleted');
     }
 
     // Just to have a verbose output.
@@ -421,7 +514,5 @@ class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
         }
       }
     }
-
-
   }
 }
