@@ -675,8 +675,7 @@ function media_browser_plus_taxonomy_term_delete($term) {
         }
       }
       // Also delete the folder when it's empty.
-      if ($all_files_deleted) {
-        $dir = media_browser_plus_construct_dir_path($folder);
+      if ($all_files_deleted && ($dir = media_browser_plus_construct_dir_path($folder))) {
         foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
           $folder_path = file_stream_wrapper_uri_normalize($scheme . '://' . $dir);
           if (!@drupal_rmdir($folder_path)) {
