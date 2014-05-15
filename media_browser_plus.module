@@ -43,7 +43,13 @@ function media_browser_plus_menu() {
     // Following approach comes from the media module.
     // @todo Investigate passing file IDs in query string rather than a menu
     // argument and then deprecate media_multi_load().
-    $items['admin/content/file/delete-multiple/%media_multi'] = array(
+
+    // @TODO Version compatibility cleanup.
+    $callback_function = '%media_multi';
+    if (module_exists('media_bulk_upload')) {
+      $callback_function = '%media_bulk_upload_multi';
+    }
+    $items['admin/content/file/delete-multiple/' . $callback_function] = array(
       'title' => 'Delete multiple files',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('file_entity_multiple_delete_confirm', 4),
