@@ -6,6 +6,39 @@
  */
 
 /**
+ * Implements hook_form_FORM_ID_alter() for views_exposed_form.
+ *
+ * Convert the media_browser_plus uri filter for filtering by file scheme into
+ * a select.
+ *
+ * @see file_filters()
+ */
+function media_browser_plus_form_views_exposed_form_alter(&$form, &$form_state) {
+  if ($form_state['view']->name == 'media_browser_plus' && isset($form['uri'])) {
+    $visible_steam_wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_VISIBLE);
+    $options = array();
+    foreach ($visible_steam_wrappers as $scheme => $information) {
+      $options[$scheme] = check_plain($information['name']);
+    }
+    if (count($visible_steam_wrappers) > 1) {
+      $form['uri'] = array(
+        '#options' => array('' => '- ' . t('Any') . ' -') + $options,
+        '#type' => 'select',
+        '#default_value' => $form['uri']['#default_value'],
+      );
+    }
+    else {
+      // If there's only one stream wrapper hide the filter.
+      unset($form['#info']['filter-uri']);
+      $form['uri'] = array(
+        '#type' => 'hidden',
+        '#default_value' => '',
+      );
+    }
+  }
+}
+
+/**
  * Implements hook_views_plugins().
  *
  * Generate a list of which base-tables to enabled the plugins for.

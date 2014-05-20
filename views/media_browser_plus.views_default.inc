@@ -218,6 +218,16 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['filters']['type']['expose']['label'] = 'Type';
   $handler->display->display_options['filters']['type']['expose']['operator'] = 'type_op';
   $handler->display->display_options['filters']['type']['expose']['identifier'] = 'type';
+  /* Filter criterion: File: Path */
+  $handler->display->display_options['filters']['uri']['id'] = 'uri';
+  $handler->display->display_options['filters']['uri']['table'] = 'file_managed';
+  $handler->display->display_options['filters']['uri']['field'] = 'uri';
+  $handler->display->display_options['filters']['uri']['operator'] = 'starts';
+  $handler->display->display_options['filters']['uri']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['uri']['expose']['operator_id'] = 'uri_op';
+  $handler->display->display_options['filters']['uri']['expose']['label'] = 'Scheme';
+  $handler->display->display_options['filters']['uri']['expose']['operator'] = 'uri_op';
+  $handler->display->display_options['filters']['uri']['expose']['identifier'] = 'uri';
 
   /* Display: Media browser */
   $handler = $view->new_display('media_browser', 'Media browser', 'media_browser_thumbnails');
@@ -274,6 +284,16 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['filters']['uid_current']['field'] = 'uid_current';
   $handler->display->display_options['filters']['uid_current']['relationship'] = 'uid';
   $handler->display->display_options['filters']['uid_current']['value'] = '1';
+  /* Filter criterion: File: Path */
+  $handler->display->display_options['filters']['uri']['id'] = 'uri';
+  $handler->display->display_options['filters']['uri']['table'] = 'file_managed';
+  $handler->display->display_options['filters']['uri']['field'] = 'uri';
+  $handler->display->display_options['filters']['uri']['operator'] = 'starts';
+  $handler->display->display_options['filters']['uri']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['uri']['expose']['operator_id'] = 'uri_op';
+  $handler->display->display_options['filters']['uri']['expose']['label'] = 'Scheme';
+  $handler->display->display_options['filters']['uri']['expose']['operator'] = 'uri_op';
+  $handler->display->display_options['filters']['uri']['expose']['identifier'] = 'uri';
 
   /* Display: Media Browser Plus */
   $handler = $view->new_display('page', 'Media Browser Plus', 'media_browser_plus');
@@ -412,6 +432,7 @@ function media_browser_plus_views_management() {
     t('Use count'),
     t('File name'),
     t('Type'),
+    t('Scheme'),
     t('Media browser'),
     t('Library (MBP)'),
     t('My files'),
