@@ -377,7 +377,7 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
         taxonomy_term_save($root_folder);
         variable_set('media_browser_plus_root_folder_tid', $root_folder->tid);
       }
-      else {
+      elseif (!drupal_installation_attempted()) {
         watchdog(
           'media_browser_plus',
           'Unable to load the media root folder term. Please check the folder management!',
