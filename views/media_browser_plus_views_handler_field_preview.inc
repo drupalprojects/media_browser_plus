@@ -77,7 +77,8 @@ class media_browser_plus_views_handler_field_preview extends views_handler_field
       case 'usage':
       case 'view':
       case 'download':
-        $link = file_entity_uri($file) . '/' . $this->options['mbp_settings']['add_link'];
+        $uri = file_entity_uri($file);
+        $link = $uri['path'] . '/' . $this->options['mbp_settings']['add_link'];
         break;
 
       case 'file':
