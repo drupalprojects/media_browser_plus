@@ -374,6 +374,7 @@ function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
         $root_folder->vid = $vocabulary->vid;
         $root_folder->weight = '-10';
         $root_folder->parent = 0;
+        $root_folder->autocreate = TRUE;
         taxonomy_term_save($root_folder);
         variable_set('media_browser_plus_root_folder_tid', $root_folder->tid);
       }
@@ -508,34 +509,37 @@ function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME
  * @see media_browser_plus_taxonomy_term_update()
  */
 function media_browser_plus_taxonomy_term_presave($term) {
-  // Figure out if this is a folder term and if so store the current file path
-  // for further processing in media_browser_plus_taxonomy_term_update().
-  $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
-  if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
-    $parent = NULL;
-    $root_folder = media_browser_plus_get_media_root_folder();
-    // Check if parent handling is necessary.
-    if (isset($term->parent)) {
-      // Ensure we're dealing with an array.
-      if (!is_array($term->parent)) {
-        $term->parent = array($term->parent);
+  // Avoid running this code when we are auto-creating the root folder term.
+  if (empty($term->autocreate)) {
+    // Figure out if this is a folder term and if so store the current file path
+    // for further processing in media_browser_plus_taxonomy_term_update().
+    $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
+    if (!empty($vocabulary) && $term->vid == $vocabulary->vid) {
+      $parent = NULL;
+      $root_folder = media_browser_plus_get_media_root_folder();
+      // Check if parent handling is necessary.
+      if (isset($term->parent)) {
+        // Ensure we're dealing with an array.
+        if (!is_array($term->parent)) {
+          $term->parent = array($term->parent);
+        }
+        // A folder term can just have one parent.
+        if (count($term->parent) > 1) {
+          $term->parent = array(reset($term->parent));
+        }
+        // Fetch the used parent.
+        $parent = reset($term->parent);
       }
-      // A folder term can just have one parent.
-      if (count($term->parent) > 1) {
-        $term->parent = array(reset($term->parent));
+      // A subfolder term is always child of the root folder. Condition ensures
+      // we don't interfere while installing the module.
+      if ($root_folder && (!isset($parent) || (empty($parent) && $term->tid != $root_folder->tid))) {
+        $term->parent = array($root_folder->tid);
       }
-      // Fetch the used parent.
-      $parent = reset($term->parent);
-    }
-    // A subfolder term is always child of the root folder. Condition ensures
-    // we don't interfere while installing the module.
-    if ($root_folder && (!isset($parent) || (empty($parent) && $term->tid != $root_folder->tid))) {
-      $term->parent = array($root_folder->tid);
-    }
-    // Actions if this is an existing term.
-    if (!empty($term->tid)) {
-      // Store current path the check later if the folder was moved.
-      $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term->original);
+      // Actions if this is an existing term.
+      if (!empty($term->tid)) {
+        // Store current path the check later if the folder was moved.
+        $term->media_browser_plus_original_path = media_browser_plus_construct_dir_path($term->original);
+      }
     }
   }
 }
@@ -544,25 +548,28 @@ function media_browser_plus_taxonomy_term_presave($term) {
  * Implements hook_taxonomy_term_insert().
  */
 function media_browser_plus_taxonomy_term_insert($term) {
-  if ($term->vocabulary_machine_name == 'media_folders') {
-    // Prepare path for new folder terms.
-    $dir = media_browser_plus_construct_dir_path($term);
-    $error = FALSE;
-    foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
-      $path = file_stream_wrapper_uri_normalize($scheme . '://' . $dir);
-      if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-        $error = TRUE;
+  // Avoid running this code when we are auto-creating the root folder term.
+  if (empty($term->autocreate)) {
+    if ($term->vocabulary_machine_name == 'media_folders') {
+      // Prepare path for new folder terms.
+      $dir = media_browser_plus_construct_dir_path($term);
+      $error = FALSE;
+      foreach (media_get_local_stream_wrappers() as $scheme => $scheme_info) {
+        $path = file_stream_wrapper_uri_normalize($scheme . '://' . $dir);
+        if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+          $error = TRUE;
+        }
       }
-    }
-    if (!$error) {
-      drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
-    }
-    else {
-      drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
-    }
+      if (!$error) {
+        drupal_set_message(t('Folder %term_name created successfully', array('%term_name' => $term->name)));
+      }
+      else {
+        drupal_set_message(t('Folder %term_name created successfully as term but failed to create as physical folder.Please do it manually', array('%term_name' => $term->name)), 'warning');
+      }
 
-    // Clear view cache for media browser plus folders.
-    media_browser_plus_clear_views_cache('media_browser_plus_folders');
+      // Clear view cache for media browser plus folders.
+      media_browser_plus_clear_views_cache('media_browser_plus_folders');
+    }
   }
 }
 
