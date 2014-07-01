@@ -887,3 +887,33 @@ function media_browser_plus_clear_views_cache($view_name) {
     }
   }
 }
+
+/**
+ * Implements hook_uuid_entity_features_export_render_alter().
+ */
+function media_browser_plus_uuid_entity_features_export_render_alter($entity_type, &$export, &$entity) {
+  if ($entity_type == 'file' && isset($export->field_folder)) {
+    $root_folder = media_browser_plus_get_media_root_folder();
+    if (isset($entity->field_folder[LANGUAGE_NONE][0]['tid']) && $entity->field_folder[LANGUAGE_NONE][0]['tid'] == $root_folder->tid) {
+      // Remove field_folder to avoid uuid clashes on the remote system.
+      // But add a tag to mark it as child of the root folder.
+      unset($export->field_folder);
+      $export->mbp_uuid_features_root_folder = TRUE;
+    }
+  }
+}
+
+/**
+ * Implements hook_uuid_entity_features_rebuild_alter().
+ */
+function media_browser_plus_uuid_entity_features_rebuild_alter($entity_type, &$entity) {
+  if ($entity_type == 'file') {
+    // If this file is marked as child of the root folder get the current root
+    // folder and set it.
+    if (!empty($entity->mbp_uuid_features_root_folder)) {
+      $root_folder = media_browser_plus_get_media_root_folder();
+      $entity->field_folder[LANGUAGE_NONE][0]['tid'] = $root_folder->tid;
+      unset($entity->mbp_uuid_features_root_folder);
+    }
+  }
+}
