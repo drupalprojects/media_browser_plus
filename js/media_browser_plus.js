@@ -209,6 +209,9 @@
             .attr('checked', !$(this).find('input.vbo-select').attr('checked'))
             .trigger('change');
         }
+      })
+      .bind('dblclick.mbp', function(e) {
+        plugin['editFiles']($(this).find('input.vbo-select').val());
       });
     $('.mbp-file-list li input.vbo-select', this.element)
       .bind('change.mbp', function(e) {
@@ -315,10 +318,16 @@
     }
   }
 
-  MBP.prototype.editFiles = function () {
+  MBP.prototype.editFiles = function (fileId) {
     var fids = this.getSelectedFiles();
-    if (fids.length) {
+    if (typeof(fileId) != 'undefined') {
+      fids = [fileId];
+    }
+    if (fids.length > 1) {
       window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'admin/content/file/edit-multiple/' + fids.join(' ');
+    }
+    else if (fids.length == 1) {
+      window.location.href = Drupal.settings.basePath + Drupal.settings.pathPrefix + 'file/' + fids[0] + '/edit';
     }
   }
 
