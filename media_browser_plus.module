@@ -770,6 +770,9 @@ function media_browser_plus_form_taxonomy_overview_terms_submit(&$form, &$form_s
   if (!empty($batch['operations'])) {
     batch_set($batch);
   }
+
+  // Clear view cache for media browser plus folders.
+  media_browser_plus_clear_views_cache('media_browser_plus_folders');
 }
 
 /**
