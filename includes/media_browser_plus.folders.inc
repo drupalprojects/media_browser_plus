@@ -144,7 +144,7 @@ function media_browser_plus_folder_update_file_locations_batch($folders, &$conte
   if (empty($context['sandbox'])) {
     $context['sandbox']['progress'] = 0;
     $files = $file_query->execute();
-    $context['sandbox']['max'] = (!empty($files['file'])) ?  count($files['file']) : 0;
+    $context['sandbox']['max'] = (!empty($files['file'])) ? count($files['file']) : 0;
     $context['local_stream_wrappers'] = media_get_local_stream_wrappers();
   }
   if (!isset($context['results'])) {
@@ -216,7 +216,7 @@ function media_browser_plus_move_physical_folder($source, $destination) {
     foreach ($files as $file) {
       if (!in_array($file, array('.', '..'))) {
         $source_path = $source . DIRECTORY_SEPARATOR . $file;
-        $copy_destination =  $destination . DIRECTORY_SEPARATOR . $file;
+        $copy_destination = $destination . DIRECTORY_SEPARATOR . $file;
         if (is_file($source_path)) {
           $transfer->copyFile($source_path, $copy_destination);
           $transfer->removeFile($source_path);

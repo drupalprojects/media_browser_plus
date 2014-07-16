@@ -9,6 +9,9 @@
  */
 class MediaBrowserPlusTest extends MediaBrowserPlusTestBase {
 
+  /**
+   * Return meta info about this test.
+   */
   public static function getInfo() {
     return array(
       'name' => 'Media Browser Plus Basic Tests',

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * The media browser plus style plugin.

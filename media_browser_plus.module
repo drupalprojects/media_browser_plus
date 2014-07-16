@@ -292,9 +292,9 @@ function media_browser_plus_download_action_cleanup() {
 /**
  * Move the file to another folder.
  *
- * @param stdClass $file
+ * @param object $file
  *   The file object to update.
- * @param stdClass $folder
+ * @param object $folder
  *   The folder object to use for the file.
  *
  * @return bool
@@ -447,7 +447,7 @@ function media_browser_plus_construct_dir_path($term = NULL) {
  *
  * @param int $tid
  *   The folder's term id.
- * @param stdClass $file
+ * @param object $file
  *   The file object.
  * @param int $replace
  *   Replace behavior when the destination file already exists.

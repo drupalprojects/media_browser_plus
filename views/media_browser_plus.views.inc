@@ -1,12 +1,11 @@
 <?php
-
 /**
  * @file
  * Provide Views data and handlers for media.module
  */
 
 /**
- * Implements hook_form_FORM_ID_alter() for views_exposed_form.
+ * Implements hook_form_FORM_ID_alter() for views_exposed_form().
  *
  * Convert the media_browser_plus uri filter for filtering by file scheme into
  * a select.

@@ -1,6 +1,6 @@
 <?php
 /**
- * @file media-views-view-media-browser.tpl.php
+ * @file
  * View template to display a grid of media previews in the media browser.
  *
  * @see views-view-list.tpl.php

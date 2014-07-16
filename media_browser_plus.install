@@ -85,7 +85,7 @@ function media_browser_plus_uninstall() {
 }
 
 /**
- * Implements of hook_requirements().
+ * Implements hook_requirements().
  */
 function media_browser_plus_requirements($phase) {
   $requirements = array();
