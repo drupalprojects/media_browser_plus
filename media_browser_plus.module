@@ -24,7 +24,8 @@ function media_browser_plus_menu() {
     'title' => 'Load Media Entities',
     'page callback' => 'media_browser_plus_move_file_callback',
     'page arguments' => array(3, 5),
-    'access callback' => 'media_browser_plus_access',
+    'access callback' => 'file_entity_access',
+    'access arguments' => array('update', 3),
     'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   );
