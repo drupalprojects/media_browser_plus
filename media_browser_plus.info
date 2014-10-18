@@ -2,6 +2,7 @@ name = Media Browser Plus for Media 2.x
 description = Provides enhanced UX and addtional features for Media.
 package = "Media"
 core = 7.x
+configure = admin/config/media/media_browser_plus_settings
 
 dependencies[] = media
 dependencies[] = taxonomy
