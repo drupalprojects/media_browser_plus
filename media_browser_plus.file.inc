@@ -5,7 +5,7 @@
  */
 
 /**
- * Implements hook_field_attach_presave().
+ * Implements hook_file_presave().
  */
 function media_browser_plus_file_presave($entity) {
   // Set appropriate default folder if necessary.
