@@ -935,7 +935,7 @@ function media_browser_plus_uuid_entity_features_export_render_alter($entity_typ
   }
 
   // Ensure exported folders also have the generic media root set.
-  if ($entity_type == 'taxonomy_term' && $export->vocabulary_machine_name == 'media_folders') {
+  if ($entity_type == 'taxonomy_term' && $export->vocabulary_machine_name == 'media_folders' && !empty($export->parent)) {
     $root_parents = array_keys($export->parent, $root_folder->uuid);
     foreach ($root_parents as $key) {
       $export->parent[$key] = 'mbp_uuid_features_root_folder';
