@@ -59,6 +59,9 @@ function _media_browser_plus_ensure_field_tags() {
   if (function_exists('file_type_get_all_types')) {
     $file_types = array_keys(file_type_get_all_types());
   }
+  elseif (function_exists('file_type_load_all')){
+    $file_types = array_keys(file_type_load_all());
+  }
   else {
     $file_types = array_keys(file_info_file_types());
   }
@@ -110,6 +113,9 @@ function _media_browser_plus_ensure_field_folder() {
   // Latest file entity version.
   if (function_exists('file_type_get_all_types')) {
     $file_types = array_keys(file_type_get_all_types());
+  } 
+  elseif (function_exists('file_type_load_all')){
+    $file_types = array_keys(file_type_load_all());
   }
   else {
     $file_types = array_keys(file_info_file_types());
