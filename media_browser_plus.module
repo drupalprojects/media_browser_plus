@@ -719,9 +719,11 @@ function media_browser_plus_taxonomy_term_delete($term) {
  * overview won't trigger any term hooks *blargh* :|
  */
 function media_browser_plus_form_taxonomy_overview_terms_alter(&$form, &$form_state, $vocabulary) {
-  if ($form['#vocabulary']->machine_name == 'media_folders') {
-    $form['#validate'][] = 'media_browser_plus_form_taxonomy_overview_terms_validate';
-    $form['#submit'][] = 'media_browser_plus_form_taxonomy_overview_terms_submit';
+  if (!isset($form_state['confirm_reset_alphabetical'])) {
+    if ($form['#vocabulary']->machine_name == 'media_folders') {
+      $form['#validate'][] = 'media_browser_plus_form_taxonomy_overview_terms_validate';
+      $form['#submit'][] = 'media_browser_plus_form_taxonomy_overview_terms_submit';
+    }
   }
 }
 
