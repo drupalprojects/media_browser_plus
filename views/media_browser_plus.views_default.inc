@@ -154,6 +154,8 @@ function media_browser_plus_views_management() {
   $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['quantity'] = '9';
+  $handler->display->display_options['pager']['options']['expose']['items_per_page'] = TRUE;
   $handler->display->display_options['style_plugin'] = 'media_browser_plus';
   $handler->display->display_options['row_plugin'] = 'fields';
   /* Header: Media browser plus: Navigation */
@@ -439,6 +441,7 @@ function media_browser_plus_views_management() {
     t('My files (MBP)'),
     t('User who uploaded'),
     t('Media Browser Plus'),
+    t('- Choose an operation -'),
   );
   return $view;
 }
