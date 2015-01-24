@@ -84,8 +84,8 @@ function media_browser_plus_menu() {
  * Implements hook_menu_alter().
  */
 function media_browser_plus_menu_alter(&$items) {
-  // If enabled replace the default file browser by mbp.
-  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE) && isset($items['admin/content/file/mbp'])) {
+  // If enabled and possible replace the default file browser by mbp.
+  if (variable_get('media_browser_plus_thumbnails_as_default_browser', TRUE) && isset($items['admin/content/file/mbp']) && isset($items['admin/content/file'])) {
     $items['admin/content/file/list'] = $items['admin/content/file'];
 
     $file_title = $items['admin/content/file']['title'];
