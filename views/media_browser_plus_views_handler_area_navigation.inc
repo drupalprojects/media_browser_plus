@@ -52,6 +52,7 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
    * Add folder filter to the query.
    */
   public function query() {
+    $root_folder = media_browser_plus_get_media_root_folder();
     if (!empty($this->view->exposed_data['mbp_current_folder'])) {
       $this->value = (int) $this->view->exposed_data['mbp_current_folder'];
       user_cookie_save(array('mbp.current_folder' => $this->value));
@@ -60,11 +61,17 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
       $this->value = (int) $_COOKIE['Drupal_visitor_mbp_current_folder'];
     }
     else {
-      $root_folder = media_browser_plus_get_media_root_folder();
       $this->value = $root_folder->tid;
     }
     $this->ensure_my_table();
-    $this->query->add_where(1, "$this->table_alias.$this->real_field", $this->value, '=');
+    $where_group = 1;
+    // If this is the root folder also show files without a folder.
+    if ($this->value == $root_folder->tid) {
+      // Add new where group to use OR condition.
+      $where_group = $this->query->set_where_group('OR');
+      $this->query->add_where($where_group, "$this->table_alias.$this->real_field", $this->value, 'IS NULL');
+    }
+    $this->query->add_where($where_group, "$this->table_alias.$this->real_field", $this->value, '=');
   }
 
   /**
