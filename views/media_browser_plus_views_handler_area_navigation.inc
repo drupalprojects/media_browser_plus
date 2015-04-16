@@ -57,7 +57,7 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
       $this->value = (int) $this->view->exposed_data['mbp_current_folder'];
       user_cookie_save(array('mbp.current_folder' => $this->value));
     }
-    elseif (empty($_COOKIE['Drupal_visitor_mbp_current_folder']) && (int) $_COOKIE['Drupal_visitor_mbp_current_folder'] > 0) {
+    elseif (!empty($_COOKIE['Drupal_visitor_mbp_current_folder']) && (int) $_COOKIE['Drupal_visitor_mbp_current_folder'] > 0) {
       $this->value = (int) $_COOKIE['Drupal_visitor_mbp_current_folder'];
     }
     else {
