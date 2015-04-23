@@ -25,13 +25,21 @@
       // resize the media browser
       if(typeof (parent.document.documentElement.clientWidth) == 'number'){
         width = parent.document.documentElement.clientWidth - 100;
+        height = parent.document.documentElement.clientHeight - 100;
         scrollTop = parent.window.pageYOffset;
         scrollLeft = parent.window.pageXOffset;
-        $('#mediaBrowser', top.document).css('width', width+'px');
+
+        $('#mediaBrowser', top.document).css({
+          width: width + 'px',
+          height: height + 'px'
+        });
         $('.ui-dialog.media-wrapper', top.document).css('top', (scrollTop+25)+'px');
         $('.ui-dialog.media-wrapper', top.document).css('left', (scrollLeft+50)+'px');
         $('#mediaBrowser', top.document).attr('width', width);
-        $('.ui-dialog.media-wrapper', top.document).css('width', (width+10)+'px');
+        $('.ui-dialog.media-wrapper', top.document).css({
+          width: (width + 10) + 'px',
+          height: (height + 10) + 'px'
+        });
       }
     },
     selectMedia : function (id) {
