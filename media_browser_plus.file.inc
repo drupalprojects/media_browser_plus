@@ -19,6 +19,6 @@ function media_browser_plus_file_presave($entity) {
   $new_path = file_stream_wrapper_uri_normalize(file_uri_scheme($entity->uri) . '://' . media_browser_plus_construct_dir_path($folder) . '/' . basename($entity->uri));
   // Only move file if necessary.
   if ($entity->uri !== $new_path) {
-    media_browser_plus_move_file($folder->tid, $entity, FILE_EXISTS_RENAME, FALSE);
+    media_browser_plus_move_file($folder->tid, $entity, NULL, FALSE);
   }
 }

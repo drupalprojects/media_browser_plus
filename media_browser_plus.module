@@ -458,7 +458,17 @@ function media_browser_plus_construct_dir_path($term = NULL) {
  * @return bool
  *   TRUE on success.
  */
-function media_browser_plus_move_file($tid, $file, $replace = FILE_EXISTS_RENAME, $save = TRUE) {
+function media_browser_plus_move_file($tid, $file, $replace = NULL, $save = TRUE) {
+
+  // See which file replace handling has to be used.
+  if (is_null($replace)) {
+    $replace = FILE_EXISTS_RENAME;
+    // See if the file entity provides the file_replace property to indicate how
+    // this has to be handled.
+    if (isset($file->file_replace) && in_array($file->file_replace, array(FILE_EXISTS_REPLACE, FILE_EXISTS_RENAME, FILE_EXISTS_ERROR))) {
+      $replace = $file->file_replace;
+    }
+  }
 
   // Ensure the new location is stored in the file entity.
   $file->field_folder[LANGUAGE_NONE] = array(array('tid' => $tid));
