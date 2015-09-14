@@ -874,6 +874,14 @@ function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_sta
     // Nothing to do for now.
     case 2:
     case 3:
+      break;
+
+    // Set media folder default value.
+    case 4:
+      if (!empty($form_state['storage']['field_folder'][LANGUAGE_NONE]) && isset($form['field_folder'])) {
+        $form['field_folder'][LANGUAGE_NONE]['#default_value'] = $form_state['storage']['field_folder'][LANGUAGE_NONE];
+      }
+      break;
   }
 }
 
