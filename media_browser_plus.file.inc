@@ -8,6 +8,13 @@
  * Implements hook_file_presave().
  */
 function media_browser_plus_file_presave($entity) {
+
+  // MBP folder processing is skipped if:
+  // - Manually requested by adding the property mbp_bypass to the file entity.
+  // - The file has no folder set and has a path in the filesystem defined.
+  if (!empty($entity->mbp_bypass) || (empty($entity->field_folder[LANGUAGE_NONE][0]['tid']) && isset($entity->uri) && file_uri_scheme($entity->uri) . '://' !== $entity->uri))
+    return;
+
   // Set appropriate default folder if necessary.
   if (empty($entity->field_folder[LANGUAGE_NONE][0]['tid']) && !isset($entity->migrate)) {
     $root = media_browser_plus_get_media_root_folder();
