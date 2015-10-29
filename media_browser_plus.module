@@ -863,9 +863,10 @@ function media_browser_plus_form_file_entity_add_upload_alter(&$form, &$form_sta
         'vocabulary' => 'media_folders',
         'parent' => 0,
       );
+      $field_folder_info = field_info_field('field_folder');
       $form['field_folder'][LANGUAGE_NONE] = array(
         '#type' => 'select',
-        '#title' => t('Folder'),
+        '#title' => $field_folder_info['label'],
         '#description' => t('Defines the folder where the uploaded files will be saved'),
         '#options' => taxonomy_allowed_values($field),
       );
