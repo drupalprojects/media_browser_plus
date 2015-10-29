@@ -4,7 +4,7 @@ package = "Media"
 core = 7.x
 configure = admin/config/media/media_browser_plus_settings
 
-dependencies[] = media
+dependencies[] = media (7.x-2.x)
 dependencies[] = taxonomy
 dependencies[] = views_tree
 dependencies[] = views_bulk_operations
