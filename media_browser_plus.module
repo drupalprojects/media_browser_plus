@@ -350,6 +350,10 @@ function media_browser_plus_thumbnailsJSON() {
         foreach ($value as $type => $params) {
           foreach ($params as $param) {
             if (is_array($param)) {
+              if (empty($param)) {
+                $valid = FALSE;
+                break;
+              }
               foreach ($param as $media_type) {
                 if (strlen(trim($media_type)) == 0) {
                   $valid = FALSE;
