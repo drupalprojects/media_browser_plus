@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Provide Views data and handlers for media.module
+ * Provide Views data and handlers for media.module.
  */
 
 /**
@@ -47,7 +48,7 @@ function media_browser_plus_views_plugins() {
 
   $path = drupal_get_path('module', 'media_browser_plus') . '/views';
 
-  // Always allow the actual file-table
+  // Always allow the actual file-table.
   $base = array('file_managed');
   if (module_exists('search_api')) {
     // If the Search API module exists, also allow indices of the file-entity

@@ -80,11 +80,11 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
 
     // Add javascript.
     drupal_add_js(array(
-        'mbp' => array(
-          'views' => array(
-            $this->view->name . ':' . $this->view->current_display => array('actions' => $actions),
-          ),
-        )),
+      'mbp' => array(
+        'views' => array(
+          $this->view->name . ':' . $this->view->current_display => array('actions' => $actions),
+        ),
+      )),
       'setting'
     );
     drupal_add_library('media_browser_plus', 'media_browser_plus');
@@ -150,4 +150,5 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
     );
     return render($element);
   }
+
 }

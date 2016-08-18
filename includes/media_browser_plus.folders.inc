@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Folder manipulation functions.
@@ -244,7 +245,6 @@ function media_browser_plus_move_physical_folder($source, $destination, $scheme 
   }
   return TRUE;
 }
-
 
 /**
  * Rebuilds the folder structure on the disk.

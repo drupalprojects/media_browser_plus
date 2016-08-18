@@ -72,4 +72,5 @@ class media_browser_plus_views_handler_field_preview extends views_handler_field
     $preview = media_get_thumbnail_preview($file);
     return drupal_render($preview);
   }
+
 }

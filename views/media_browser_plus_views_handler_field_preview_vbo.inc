@@ -103,4 +103,5 @@ class media_browser_plus_views_handler_field_preview_vbo extends views_bulk_oper
     }
     return $output;
   }
+
 }

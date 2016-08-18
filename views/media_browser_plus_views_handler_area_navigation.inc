@@ -18,6 +18,7 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
    * Initialize the handler.
    *
    * This is kind of hackish, how is this done properly?
+   *
    * @todo Review / refactor to meet the proper views coding style.
    */
   public function init(&$view, &$options) {
@@ -153,4 +154,5 @@ class media_browser_plus_views_handler_area_navigation extends views_handler_are
       '#default_value' => 0,
     );
   }
+
 }
