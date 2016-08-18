@@ -34,7 +34,7 @@ function media_browser_plus_menu() {
     'description' => 'Change the behaviour and layout of the media browser plus UI',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('media_browser_plus_media_settings'),
-    'access arguments' => array('administer files'),
+    'access arguments' => array('administer media browser'),
     'file path' => $path . '/includes',
     'file' => 'media_browser_plus.admin.inc',
   );
