@@ -140,7 +140,6 @@ function template_preprocess_media_browser_plus_views_view_media_browser(&$vars)
 
   $view = $vars['view'];
   $display_handler = $vars['view']->display_handler;
-  $handler = $vars['view']->style_plugin;
 
   // If this is a media browser display add some more JS.
   // Re-uses vast parts of template_preprocess_media_views_view_media_browser().

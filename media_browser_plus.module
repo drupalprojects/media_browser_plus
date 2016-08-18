@@ -255,7 +255,6 @@ function media_browser_plus_download_multiple_files($files) {
     }
 
     // Register cleanup function. The created archive has to be removed again.
-    $cleanup_context = &drupal_static('media_browser_plus_download_action', $archiver_context['destination']);
     drupal_register_shutdown_function('media_browser_plus_download_action_cleanup');
   }
   elseif (count($files) == 1) {
@@ -832,7 +831,7 @@ function media_browser_plus_form_file_entity_add_upload_multiple_submit(&$form, 
   // Iterate over all saved files and add the folder setting.
   if (isset($form_state['values']['field_folder'])) {
     $folder = $form_state['values']['field_folder'];
-    foreach ($form_state['files'] as $fid => $file) {
+    foreach ($form_state['files'] as $file) {
       // Only set folder if not set or different to what will be set.
       if (empty($file->field_folder[LANGUAGE_NONE][0]['tid']) || $file->field_folder[LANGUAGE_NONE][0]['tid'] != $folder) {
         $file->field_folder[LANGUAGE_NONE][0]['tid'] = $folder;

@@ -47,7 +47,7 @@ class media_browser_plus_views_handler_area_actions extends views_handler_area {
       // 'usage' => t('Usage'),
     );
     // Check if there's a basket area, if so add basket action.
-    foreach ($this->view->display_handler->handlers as $area => $handlers) {
+    foreach ($this->view->display_handler->handlers as $handlers) {
       foreach ($handlers as $handler) {
         if ($handler instanceof media_browser_plus_views_handler_area_basket) {
           $action_options['basket'] = t('Add to Media basket');
