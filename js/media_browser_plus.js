@@ -177,6 +177,8 @@
       });
     }
 
+    // Expose an instance of the object for below closure.
+    var MBPInstance = this;
     // Make media basked.
     if (this.options.media_basket ) {
       $('.mbp-file-basket-list li', this.element)
@@ -185,7 +187,7 @@
         window.setTimeout(function(){
           $('.mbp-file-basket-list li', plugin.element).trigger('click');
         }, 1000);
-        window.location.href = this.getBasePath() + 'admin/content/file/download-multiple/' + $('input[name=mbp_basket_files]', plugin.element).val();
+        window.location.href = MBPInstance.getBasePath() + 'admin/content/file/download-multiple/' + $('input[name=mbp_basket_files]', plugin.element).val();
       });
 
       if (this.options.files_draggable) {
