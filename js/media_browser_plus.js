@@ -64,7 +64,7 @@
             e.preventDefault();
           });
       }
-    }
+    };
 
     this.init();
   }
@@ -98,6 +98,16 @@
       var folder = $('.folder-id-' + currentFolder, this.element).show();
       folder.parents('ol').show();
       folder.parents('li').addClass('open');
+    }
+    // Open some folders.
+    if (typeof Drupal.behaviors.media_browser_plus_views.openFolders != 'undefined') {
+      jQuery.each(Drupal.behaviors.media_browser_plus_views.openFolders, function(folder_id){
+        plugin.element
+          .find('li:has(>.folder-id-' + folder_id + ')')
+          .addClass('open')
+          .show()
+          .find('ol:first').show();
+      });
     }
 
     // Enable drag n drop.
@@ -158,7 +168,7 @@
           });
         },
         over: function(event, ui) {
-          // Open subfolder after 1 second hovering.
+          // Open subfolder after 750 miliseconds hovering.
           if (ui.helper.data('mbpDragHoverTimeout')) {
             window.clearTimeout(ui.helper.data('mbpDragHoverTimeout'));
           }
@@ -166,7 +176,7 @@
           ui.helper.data('mbpDragHoverTimeout', window.setTimeout(function(){
             //@todo Figure out why subfolders aren't initialized droppables.
             plugin.folderOpen(target.parent());
-          }, 1000));
+          }, 750));
         },
         out: function(event, ui ) {
           if (ui.helper.data('mbpDragHoverTimeout')) {
@@ -254,6 +264,7 @@
         });
       }
     }
+
   };
 
   MBP.prototype.destroy = function () {
@@ -291,27 +302,43 @@
   };
 
   MBP.prototype.folderOpen = function(folder) {
+    var folder_id = $(folder).children('div.folder-name').attr('class').replace(this.options.folderIdRegexp, '$1');
+    Drupal.behaviors.media_browser_plus_views.openFolders[folder_id] = folder_id;
     $(folder)
       .addClass('open')
       .find('ol:first').show();
-  }
+  };
 
   MBP.prototype.folderClose = function(folder) {
+    var folder_id = $(folder).children('div.folder-name').attr('class').replace(this.options.folderIdRegexp, '$1');
+    delete Drupal.behaviors.media_browser_plus_views.openFolders[folder_id];
     $(folder)
       .removeClass('open')
       .find('ol').hide();
-  }
+  };
 
   // Loads the files of a folder.
   MBP.prototype.loadFiles = function(folder_id) {
-    if ($(':input[name=mbp_current_folder]', this.element).length && $(':input[name=mbp_current_folder]', this.element).val() != folder_id) {
+    // We could disable reloading the folder if the folder_id is the same but
+    // do want this? It allows to re-load a folder.
+    // $(':input[name=mbp_current_folder]', this.element).val() != folder_id
+    if ($(':input[name=mbp_current_folder]', this.element).length) {
       $(':input[name=mbp_current_folder]', this.element).val(folder_id).trigger('change');
       $('li.active', this.element).removeClass('active');
       $('li:has(>.folder-id-' + folder_id + ')', this.element)
         .addClass('active')
         .prepend('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
     }
-  }
+  };
+
+  // Reloads the files of the current folder.
+  MBP.prototype.reloadFiles = function(folder_id) {
+    $(':input[name=mbp_current_folder]', this.element).trigger('change');
+    $('li.active', this.element).removeClass('active');
+    $('li:has(>.folder-id-' + folder_id + ')', this.element)
+      .addClass('active')
+      .prepend('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
+  };
 
   MBP.prototype.getSelectedFiles = function () {
     var fids = [];
@@ -320,14 +347,14 @@
       fids.push(item.id.replace(plugin.options.fileIdRegexp, '$1'));
     });
     return fids;
-  }
+  };
 
   MBP.prototype.deleteFiles = function () {
     var fids = this.getSelectedFiles();
     if (fids.length) {
       window.location.href = this.getBasePath() + 'admin/content/file/delete-multiple/' + fids.join(' ') + '?destination=' + this.getDestinationPath();
     }
-  }
+  };
 
   MBP.prototype.basketFiles = function () {
     var plugin = this;
@@ -337,7 +364,7 @@
         plugin.addItemToBasked(item);
       });
     }
-  }
+  };
 
   MBP.prototype.editFiles = function (fileId) {
     var fids = this.getSelectedFiles();
@@ -350,14 +377,14 @@
     else if (fids.length == 1) {
       window.location.href = this.getBasePath() + 'file/' + fids[0] + '/edit?destination=' + this.getDestinationPath();
     }
-  }
+  };
 
   MBP.prototype.downloadFiles = function () {
     var fids = this.getSelectedFiles();
     if (fids.length) {
       window.location.href = this.getBasePath() + 'admin/content/file/download-multiple/' + fids.join(' ');
     }
-  }
+  };
 
   $.fn[pluginName] = function ( options ) {
     return this.each(function () {
@@ -371,9 +398,10 @@
         }
       }
     });
-  }
+  };
 
   Drupal.behaviors.media_browser_plus_views = {
+    openFolders: {},
     attach: function (context) {
       if (Drupal.settings.mbp.views) {
         for(var i in Drupal.settings.mbp.views) {
