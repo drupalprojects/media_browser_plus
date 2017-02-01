@@ -10,6 +10,9 @@
  */
 function media_browser_plus_file_presave($entity) {
 
+  // Flush the views cache.
+  drupal_register_shutdown_function('media_browser_plus_clear_views_cache', 'media_browser_plus');
+
   // MBP folder processing is skipped if:
   // - Manually requested by adding the property mbp_bypass to the file entity.
   // - The file has no folder set and has a path in the filesystem defined.
