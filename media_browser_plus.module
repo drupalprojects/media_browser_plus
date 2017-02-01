@@ -503,18 +503,25 @@ function media_browser_plus_move_file($tid, $file, $replace = NULL, $save = TRUE
       return TRUE;
     }
 
-    $folder = taxonomy_term_load($tid);
-    $path = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . media_browser_plus_construct_dir_path($folder));
-    file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-    if ($save) {
-      return file_move($file, $path, $replace);
+    // If folder sync is enable move the file and then update the file entity.
+    if (variable_get('media_browser_plus_filesystem_folders', TRUE)) {
+      $folder = taxonomy_term_load($tid);
+      $path = file_stream_wrapper_uri_normalize(file_uri_scheme($file->uri) . '://' . media_browser_plus_construct_dir_path($folder));
+      file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+      if ($save) {
+        return file_move($file, $path, $replace);
+      }
+      else {
+        if ($uri = file_unmanaged_move($file->uri, $path, $replace)) {
+          $file->uri = $uri;
+          return TRUE;
+        }
+        return FALSE;
+      }
     }
     else {
-      if ($uri = file_unmanaged_move($file->uri, $path, $replace)) {
-        $file->uri = $uri;
-        return TRUE;
-      }
-      return FALSE;
+      // If folder sync is disabled just the file entity is updated.
+      file_save($file);
     }
   }
   return TRUE;
