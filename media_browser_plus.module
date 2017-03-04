@@ -352,15 +352,16 @@ function media_browser_plus_file_entity_access_wrapper($op, $files = NULL, $acco
  *   FALSE!
  */
 function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
+  $t = get_t();
   $root_folder = FALSE;
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!$vocabulary) {
     $vocabulary = (object) array(
       'name' => 'Media Folders',
-      'description' => st('Use media folders to organize your media'),
+      'description' => $t('Use media folders to organize your media'),
       'machine_name' => 'media_folders',
       'hierarchy' => 1,
-      'help' => st('Enter a concise name for the media folder'),
+      'help' => $t('Enter a concise name for the media folder'),
     );
     taxonomy_vocabulary_save($vocabulary);
   }
