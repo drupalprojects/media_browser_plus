@@ -352,10 +352,10 @@ function media_browser_plus_file_entity_access_wrapper($op, $files = NULL, $acco
  *   FALSE!
  */
 function media_browser_plus_get_media_root_folder($autocreate = FALSE) {
-  $t = get_t();
   $root_folder = FALSE;
   $vocabulary = taxonomy_vocabulary_machine_name_load('media_folders');
   if (!$vocabulary) {
+    $t = get_t();
     $vocabulary = (object) array(
       'name' => 'Media Folders',
       'description' => $t('Use media folders to organize your media'),
